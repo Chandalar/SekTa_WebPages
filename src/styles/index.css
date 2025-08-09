@@ -1,0 +1,19 @@
+/* Tailwind v4 tapa */
+@import "tailwindcss";
+
+/* SekTa-värit tokenoitu @themeen */
+@theme {
+  --color-bg: #0b0a16;
+  --color-card: #141129;
+  --color-text: #ecebff;
+  --color-muted: #b7b3d9;
+  --color-brand: #6b5bd7;   /* violetti */
+  --color-accent: #f2a24a;  /* oranssi */
+}
+
+/* Globaalit */
+html, body, #root { height: 100%; }
+body { background: var(--color-bg); color: var(--color-text); }
+
+/* V4:ssa ei tarvita @tailwind base/components/utilities -direktiivejä */
+    
