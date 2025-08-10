@@ -1,4 +1,4 @@
-const FIXTURES = [
+export const FIXTURES = [
   { date: "2025-10-04", time: "14:00", home: "SekTa", away: "TBS", venue: "Kupittaa, Turku" },
   { date: "2025-10-18", time: "16:30", home: "SBS Wirmo 2", away: "SekTa", venue: "Mynämäki" },
 ];

@@ -16,4 +16,19 @@ html, body, #root { height: 100%; }
 body { background: var(--color-bg); color: var(--color-text); }
 
 /* V4:ssa ei tarvita @tailwind base/components/utilities -direktiivejä */
-    
+    /* Match day theme tweak: hotter palette */
+body.match-day {
+  --color-bg: #130a0a;         /* darker, warm */
+  --color-card: #1b0f12;
+  --color-text: #fff7f2;
+  --color-muted: #ffd7c2;
+  --color-brand: #ff6243;      /* hot orange-red */
+  --color-accent: #ffd166;     /* warm highlight */
+}
+
+/* Optional subtle pulse on brand colored underline when match-day */
+body.match-day .group [layoutid="nav-underline"],
+body.match-day [layoutid="nav-underline"] {
+  animation: md-pulse 2s ease-in-out infinite;
+}
+@keyframes md-pulse { 0%,100%{opacity:.7} 50%{opacity:1} }
