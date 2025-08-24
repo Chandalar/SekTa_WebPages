@@ -16,6 +16,7 @@ const PLAYERS = [
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
   { name: "Mika Ahven", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 1 },
   { name: "Matias Virta", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 30 },
+  { name: "Lassi Liukkonen", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 35 },
 ];
 
 function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {

@@ -9,7 +9,8 @@ import {
   History,
   Filter,
   ArrowUpDown,
-  Eye
+  Eye,
+  Target
 } from 'lucide-react';
 import { 
   AnimatedBarChart, 
@@ -50,6 +51,11 @@ export default function Statistics() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [positionFilter, setPositionFilter] = useState('all');
   const [seasonComparison, setSeasonComparison] = useState(null);
+  
+  // Goalie-specific state
+  const [goalieStats, setGoalieStats] = useState([]);
+  const [goalieSortBy, setGoalieSortBy] = useState('savePercentage');
+  const [goalieSortOrder, setGoalieSortOrder] = useState('desc');
 
   // Helper function to format season names
   const formatSeasonName = (season) => {
@@ -91,6 +97,10 @@ export default function Statistics() {
         const seasonPlayers = await getPlayersForSeason(latestSeason, data.players);
         setPlayerStats(seasonPlayers);
         
+        // Filter goalies for the latest season
+        const seasonGoalies = await getGoaliesForSeason(latestSeason, data.players);
+        setGoalieStats(seasonGoalies);
+        
         // Calculate team stats for the current season
         const teamStats = {
           totalGoals: seasonPlayers.reduce((sum, p) => sum + p.goals, 0),
@@ -115,10 +125,10 @@ export default function Statistics() {
       allPlayers = data?.players || [];
     }
     
-    // Filter players who have data for the target season
+    // Filter players who have data for the target season and are NOT goalies
     return allPlayers.map(player => {
       const seasonData = player.seasons?.find(s => s.season === targetSeason);
-      if (seasonData) {
+      if (seasonData && seasonData.position !== 'Maalivahti') {
         return {
           ...player,
           games: seasonData.games,
@@ -126,6 +136,32 @@ export default function Statistics() {
           assists: seasonData.assists,
           points: seasonData.points,
           penalties: seasonData.penalties,
+          season: targetSeason
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+  
+  const getGoaliesForSeason = async (targetSeason, allPlayers = null) => {
+    if (!allPlayers) {
+      const data = await getPlayerStatsFromCSV();
+      allPlayers = data?.players || [];
+    }
+    
+    // Filter players who have data for the target season and ARE goalies
+    return allPlayers.map(player => {
+      const seasonData = player.seasons?.find(s => s.season === targetSeason);
+      if (seasonData && seasonData.position === 'Maalivahti') {
+        return {
+          ...player,
+          games: seasonData.games,
+          savePercentage: seasonData.savePercentage,
+          goalsAgainstAverage: seasonData.goalsAgainstAverage,
+          saves: seasonData.saves,
+          goalsAgainst: seasonData.goalsAgainst,
+          wins: seasonData.wins,
+          shutouts: seasonData.shutouts,
           season: targetSeason
         };
       }
@@ -143,6 +179,10 @@ export default function Statistics() {
     // Load players for the selected season
     const seasonPlayers = await getPlayersForSeason(newSeason);
     setPlayerStats(seasonPlayers);
+    
+    // Load goalies for the selected season
+    const seasonGoalies = await getGoaliesForSeason(newSeason);
+    setGoalieStats(seasonGoalies);
     
     // Update team stats
     const teamStats = {
@@ -269,6 +309,13 @@ export default function Statistics() {
       const bValue = b[sortBy] || 0;
       return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
     });
+    
+  const filteredGoalies = goalieStats
+    .sort((a, b) => {
+      const aValue = a[goalieSortBy] || 0;
+      const bValue = b[goalieSortBy] || 0;
+      return goalieSortOrder === 'desc' ? bValue - aValue : aValue - bValue;
+    });
 
   const handleSort = (field) => {
     if (sortBy === field) {
@@ -278,10 +325,20 @@ export default function Statistics() {
       setSortOrder('desc');
     }
   };
+  
+  const handleGoalieSort = (field) => {
+    if (goalieSortBy === field) {
+      setGoalieSortOrder(goalieSortOrder === 'desc' ? 'asc' : 'desc');
+    } else {
+      setGoalieSortBy(field);
+      setGoalieSortOrder('desc');
+    }
+  };
 
   const tabs = [
     { id: 'overview', label: 'Yleiskatsaus', icon: BarChart3 },
     { id: 'players', label: 'Pelaajat', icon: Users },
+    { id: 'goalies', label: 'Maalivahdit', icon: Target },
     { id: 'team', label: 'Joukkue', icon: Shield },
     { id: 'history', label: 'Historia', icon: History },
     { id: 'comparison', label: 'Vertailu', icon: TrendingUp }
@@ -414,7 +471,7 @@ export default function Statistics() {
             </div>
             
             <p className="text-xl text-white/70 mt-12">
-              Kattavat tilastot ja analytiikka - {playerStats.length} pelaajaa
+              Kattavat tilastot ja analytiikka - {playerStats.length} pelaajaa, {goalieStats.length} maalivahti
             </p>
             <div className="mt-6 flex justify-center gap-4 flex-wrap">
               <button 
@@ -635,7 +692,7 @@ export default function Statistics() {
               </div>
               
               <div className="text-white/60 text-sm">
-                Naytetaan {filteredPlayers.length} pelaajaa kaudelta {selectedSeason}
+                Naytetaan {filteredPlayers.length} kenttapelaajaa kaudelta {selectedSeason}
               </div>
             </div>
 
@@ -702,6 +759,127 @@ export default function Statistics() {
                         </td>
                       </motion.tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {selectedTab === 'goalies' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="text-white/70" size={20} />
+                  <select
+                    value={goalieSortBy}
+                    onChange={(e) => setGoalieSortBy(e.target.value)}
+                    className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
+                  >
+                    <option value="savePercentage">Torjunta%</option>
+                    <option value="goalsAgainstAverage">PMO</option>
+                    <option value="saves">Torjunnat</option>
+                    <option value="wins">Voitot</option>
+                    <option value="games">Pelit</option>
+                    <option value="shutouts">Nollapelit</option>
+                    <option value="name">Nimi</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="text-white/60 text-sm">
+                Näytetään {filteredGoalies.length} maalivahti kaudelta {selectedSeason}
+              </div>
+            </div>
+
+            <div className="bg-white/10 backdrop-blur-md rounded-xl overflow-hidden border border-white/10">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-white/5">
+                    <tr className="text-left">
+                      <th className="p-4 text-white font-semibold cursor-pointer" onClick={() => handleGoalieSort('name')}>
+                        Maalivahti
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('games')}>
+                        O (Pelit)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('savePercentage')}>
+                        T% (Torjunta%)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('goalsAgainstAverage')}>
+                        PMO (Maalit/Ottelu)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('saves')}>
+                        T (Torjunnat)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('goalsAgainst')}>
+                        PM (Päästetyt)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('wins')}>
+                        V (Voitot)
+                      </th>
+                      <th className="p-4 text-white font-semibold cursor-pointer text-center" onClick={() => handleGoalieSort('shutouts')}>
+                        NP (Nollapelit)
+                      </th>
+                      <th className="p-4 text-white font-semibold text-center">
+                        Toiminnot
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {filteredGoalies.map((goalie, index) => (
+                      <motion.tr
+                        key={goalie.name || index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="hover:bg-white/5 transition-colors"
+                      >
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                              🥅
+                            </div>
+                            <div>
+                              <div className="text-white font-semibold">{goalie.name || 'Unknown Goalie'}</div>
+                              <div className="text-white/60 text-sm">Maalivahti</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4 text-center text-white font-semibold">{goalie.games || 0}</td>
+                        <td className="p-4 text-center text-green-400 font-bold">
+                          {goalie.savePercentage ? `${goalie.savePercentage.toFixed(1)}%` : '0.0%'}
+                        </td>
+                        <td className="p-4 text-center text-yellow-400 font-bold">
+                          {goalie.goalsAgainstAverage ? goalie.goalsAgainstAverage.toFixed(2) : '0.00'}
+                        </td>
+                        <td className="p-4 text-center text-blue-400 font-bold">{goalie.saves || 0}</td>
+                        <td className="p-4 text-center text-red-400 font-bold">{goalie.goalsAgainst || 0}</td>
+                        <td className="p-4 text-center text-green-400 font-bold">{goalie.wins || 0}</td>
+                        <td className="p-4 text-center text-purple-400 font-bold">{goalie.shutouts || 0}</td>
+                        <td className="p-4 text-center">
+                          <button
+                            onClick={() => loadPlayerHistory(goalie.name)}
+                            className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-colors"
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </td>
+                      </motion.tr>
+                    ))}
+                    {filteredGoalies.length === 0 && (
+                      <tr>
+                        <td colSpan="9" className="p-8 text-center text-white/60">
+                          Ei maalivahtitietoja tälle kaudelle
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

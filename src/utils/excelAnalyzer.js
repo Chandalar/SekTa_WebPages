@@ -1028,7 +1028,22 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 KAUSI 2022-2023,MAALIVAHDIT Regular Season,,,,,,,,,,,,,,,,
 MAALIVAHDIT,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
 ,"Ahven, Mika",18,93.7,2.2,168,39,10,3
-,"Virta, Matias",14,92.1,2.5,145,35,8,2`;
+,"Virta, Matias",14,92.1,2.5,145,35,8,2
+,,,,,,,,,,,,,,,,
+KAUSI 2019-2020,Suomen Cup,,,MAALIVAHDIT,,,,,,,,,,,,
+,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Liukkonen, Lassi (MV)",3,75.38,7.21,49,16,1,0
+,"Virtanen, Esa (MV)",2,68.18,8.50,30,17,0,0
+,,,,,,,,,,,,,,,,
+KAUSI 2018-2019,IV-DIV Lohko B,,,MAALIVAHDIT,,,,,,,,,,,,
+,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Liukkonen, Lassi (MV)",12,88.24,3.75,135,45,7,1
+,"Ahven, Mika (MV)",8,85.71,4.25,96,34,4,0
+,,,,,,,,,,,,,,,,
+KAUSI 2017-2018,III-DIV Karsinnat,,,MAALIVAHDIT,,,,,,,,,,,,
+,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Virtanen, Esa (MV)",15,79.31,5.20,138,78,6,0
+,"Liukkonen, Lassi (MV)",10,82.14,4.80,115,48,5,1`;
   
   console.log('📄 Creating comprehensive multi-division test CSV...');
   
