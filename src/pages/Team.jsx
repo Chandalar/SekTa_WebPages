@@ -14,6 +14,8 @@ const PLAYERS = [
   { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
   { name: "Vesa Halme", role: "Puolustaja", img: "/Vesku.jpg", video: "/Vesku.mp4", number: 55 },
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
+  { name: "Mika Ahven", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 1 },
+  { name: "Matias Virta", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 30 },
 ];
 
 function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
@@ -25,11 +27,46 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
     if (videoRef.current) videoRef.current.load();
   }, []);
 
-  const playerStats = stats?.find(s => 
-    s.name && p.name && 
-    (s.name.toLowerCase().includes(p.name.split(' ')[0].toLowerCase()) ||
-     p.name.toLowerCase().includes(s.name.split(' ')[0]?.toLowerCase()))
-  );
+  const playerStats = stats?.find(s => {
+    if (!s.name || !p.name) return false;
+    
+    // First try exact name match
+    if (s.name.toLowerCase() === p.name.toLowerCase()) {
+      console.log(`✅ Exact match: ${p.name} <-> ${s.name}`, s);
+      return true;
+    }
+    
+    // Then try exact first name + last name match
+    const sNameParts = s.name.toLowerCase().split(' ');
+    const pNameParts = p.name.toLowerCase().split(' ');
+    
+    if (sNameParts.length >= 2 && pNameParts.length >= 2) {
+      const match = sNameParts[0] === pNameParts[0] && sNameParts[1] === pNameParts[1];
+      if (match) {
+        console.log(`✅ Name parts match: ${p.name} <-> ${s.name}`, s);
+        return true;
+      }
+    }
+    
+    // Only fall back to partial matching if names are very similar
+    const sFirst = sNameParts[0];
+    const pFirst = pNameParts[0];
+    const sLast = sNameParts[sNameParts.length - 1];
+    const pLast = pNameParts[pNameParts.length - 1];
+    
+    // Avoid "Mika" matching both "Mika Aaltonen" and "Mika Ahven"
+    const match = (sFirst === pFirst && sLast === pLast);
+    if (match) {
+      console.log(`✅ First+Last match: ${p.name} <-> ${s.name}`, s);
+    }
+    return match;
+  });
+  
+  // Special debug for Mika Ahven
+  if (p.name.includes('Mika Ahven')) {
+    console.log(`🎯 Mika Ahven card - found stats:`, playerStats);
+    console.log(`🎯 Available stats in array:`, stats?.filter(s => s.name.toLowerCase().includes('mika')));
+  }
 
   // If player has no data for this season, show a dimmed/placeholder card
   if (!hasSeasonData) {
@@ -101,18 +138,43 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
         {playerStats && (
           <div className="absolute top-2 right-2 bg-black/70 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <div className="text-xs text-white space-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-orange-400">⚽</span>
-                <span>{playerStats.goals || 0}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-cyan-400">🎯</span>
-                <span>{playerStats.assists || 0}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <span className="text-purple-400">🏆</span>
-                <span>{playerStats.points || 0}</span>
-              </div>
+              {playerStats.position === 'Maalivahti' ? (
+                // Goalie hover stats
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-green-400">🏆</span>
+                    <span>{playerStats.wins || 0}V</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-blue-400">🚫</span>
+                    <span>{playerStats.shutouts || 0}NP</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-yellow-400">🥅</span>
+                    <span>{playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}</span>
+                  </div>
+                </>
+              ) : (
+                // Regular player hover stats
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-orange-400">⚽</span>
+                    <span>{playerStats.goals || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-cyan-400">🎯</span>
+                    <span>{playerStats.assists || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-purple-400">🏆</span>
+                    <span>{playerStats.points || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-red-400">🟨</span>
+                    <span>{(playerStats.penalties || 0) * 2}min</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -149,15 +211,36 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
       {/* Performance indicators */}
       {playerStats && (
         <div className="mt-3 flex justify-center gap-2">
-          <div className="bg-orange-500/20 px-2 py-1 rounded text-xs text-orange-400">
-            {playerStats.goals || 0}M
-          </div>
-          <div className="bg-cyan-500/20 px-2 py-1 rounded text-xs text-cyan-400">
-            {playerStats.assists || 0}S
-          </div>
-          <div className="bg-purple-500/20 px-2 py-1 rounded text-xs text-purple-400">
-            {playerStats.points || 0}P
-          </div>
+          {playerStats.position === 'Maalivahti' ? (
+            // Goalie stats
+            <>
+              <div className="bg-green-500/20 px-2 py-1 rounded text-xs text-green-400">
+                {playerStats.wins || 0}V
+              </div>
+              <div className="bg-blue-500/20 px-2 py-1 rounded text-xs text-blue-400">
+                {playerStats.shutouts || 0}NP
+              </div>
+              <div className="bg-yellow-500/20 px-2 py-1 rounded text-xs text-yellow-400">
+                {playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}
+              </div>
+            </>
+          ) : (
+            // Regular player stats
+            <>
+              <div className="bg-orange-500/20 px-2 py-1 rounded text-xs text-orange-400">
+                {playerStats.goals || 0}M
+              </div>
+              <div className="bg-cyan-500/20 px-2 py-1 rounded text-xs text-cyan-400">
+                {playerStats.assists || 0}S
+              </div>
+              <div className="bg-purple-500/20 px-2 py-1 rounded text-xs text-purple-400">
+                {playerStats.points || 0}P
+              </div>
+              <div className="bg-red-500/20 px-2 py-1 rounded text-xs text-red-400">
+                {(playerStats.penalties || 0) * 2}min
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -171,18 +254,45 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
             className="mt-4 pt-4 border-t border-white/20"
           >
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70">Maalitehokkuus:</span>
-                <span className="text-orange-400 font-semibold">
-                  {playerStats.points > 0 ? Math.round((playerStats.goals / playerStats.points) * 100) : 0}%
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-white/70">Syöttötehokkuus:</span>
-                <span className="text-cyan-400 font-semibold">
-                  {playerStats.points > 0 ? Math.round((playerStats.assists / playerStats.points) * 100) : 0}%
-                </span>
-              </div>
+              {playerStats.position === 'Maalivahti' ? (
+                // Goalie detailed stats
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Torjuntaprosentti:</span>
+                    <span className="text-yellow-400 font-semibold">
+                      {playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Voittoprosentti:</span>
+                    <span className="text-green-400 font-semibold">
+                      {playerStats.games > 0 ? Math.round((playerStats.wins / playerStats.games) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">PMO:</span>
+                    <span className="text-red-400 font-semibold">
+                      {playerStats.goalsAgainstAverage ? playerStats.goalsAgainstAverage.toFixed(2) : '0.00'}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                // Regular player detailed stats
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Maalitehokkuus:</span>
+                    <span className="text-orange-400 font-semibold">
+                      {playerStats.points > 0 ? Math.round((playerStats.goals / playerStats.points) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/70">Syöttötehokkuus:</span>
+                    <span className="text-cyan-400 font-semibold">
+                      {playerStats.points > 0 ? Math.round((playerStats.assists / playerStats.points) * 100) : 0}%
+                    </span>
+                  </div>
+                </>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -264,12 +374,16 @@ export default function Team() {
         
         console.log(`✅ Loaded ${seasonPlayers.length} players for season ${latestSeason}`);
         
+        // Debug: Log goalie data specifically
+        const goalies = seasonPlayers.filter(p => p.position === 'Maalivahti');
+        console.log(`🥅 Found ${goalies.length} goalies:`, goalies);
+        
         // Debug: Log Mika's data specifically
         const mika = seasonPlayers.find(p => 
           p.name.toLowerCase().includes('mika')
         );
         if (mika) {
-          console.log('🎯 Found Mika Aaltonen stats for current season:', mika);
+          console.log('🎯 Found Mika stats for current season:', mika);
         }
       } else {
         console.log('⚠️ No CSV data available, creating from Excel...');
@@ -348,7 +462,7 @@ export default function Team() {
     const seasonPlayers = allPlayers.map(player => {
       const seasonData = player.seasons?.find(s => s.season === targetSeason);
       if (seasonData) {
-        return {
+        const seasonPlayer = {
           ...player,
           games: seasonData.games,
           goals: seasonData.goals,
@@ -357,6 +471,19 @@ export default function Team() {
           penalties: seasonData.penalties,
           season: targetSeason
         };
+        
+        // Add goalie-specific stats if applicable
+        if (seasonData.position === 'Maalivahti' || player.position === 'Maalivahti') {
+          seasonPlayer.position = 'Maalivahti';
+          seasonPlayer.savePercentage = seasonData.savePercentage || player.savePercentage;
+          seasonPlayer.goalsAgainstAverage = seasonData.goalsAgainstAverage || player.goalsAgainstAverage;
+          seasonPlayer.saves = seasonData.saves || player.saves;
+          seasonPlayer.goalsAgainst = seasonData.goalsAgainst || player.goalsAgainst;
+          seasonPlayer.wins = seasonData.wins || player.wins;
+          seasonPlayer.shutouts = seasonData.shutouts || player.shutouts;
+        }
+        
+        return seasonPlayer;
       }
       return null;
     }).filter(Boolean);
@@ -630,6 +757,49 @@ export default function Team() {
                 🧪 Create Test CSV (Correct Stats)
               </button>
               <button 
+                onClick={() => {
+                  console.log('🔧 MANUAL GOALIE TEST: Injecting goalie stats...');
+                  const testGoalieStats = [
+                    {
+                      name: 'Mika Ahven',
+                      position: 'Maalivahti',
+                      games: 15,
+                      goals: 0,
+                      assists: 0,
+                      points: 0,
+                      penalties: 0,
+                      savePercentage: 94.2,
+                      goalsAgainstAverage: 2.1,
+                      saves: 142,
+                      goalsAgainst: 32,
+                      wins: 8,
+                      shutouts: 2
+                    },
+                    {
+                      name: 'Matias Virta',
+                      position: 'Maalivahti',
+                      games: 12,
+                      goals: 0,
+                      assists: 0,
+                      points: 0,
+                      penalties: 0,
+                      savePercentage: 91.8,
+                      goalsAgainstAverage: 2.4,
+                      saves: 98,
+                      goalsAgainst: 29,
+                      wins: 7,
+                      shutouts: 1
+                    },
+                    ...stats.filter(p => p.name !== 'Mika Ahven' && p.name !== 'Matias Virta')
+                  ];
+                  setStats(testGoalieStats);
+                  alert('Goalie stats injected! Check Mika Ahven and Matias Virta cards.');
+                }}
+                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
+              >
+                🔧 TEST Goalie Stats
+              </button>
+              <button 
                 onClick={async () => {
                   console.log('📄 Creating CSV from Excel...');
                   const result = await createCSVFromExcel();
@@ -734,6 +904,7 @@ export default function Team() {
                   <option value="all">Kaikki</option>
                   <option value="hyökkääjä">Hyökkääjät</option>
                   <option value="puolustaja">Puolustajat</option>
+                  <option value="maalivahti">Maalivahdit</option>
                 </select>
               </div>
               
@@ -878,30 +1049,63 @@ export default function Team() {
                     <div>
                       <h4 className="text-lg font-semibold text-white mb-4">Nykyinen kausi ({selectedSeason})</h4>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <StatsCard
-                          title="Maalit"
-                          value={selectedPlayer.goals || 0}
-                          icon="⚽"
-                          color="#f97316"
-                        />
-                        <StatsCard
-                          title="Syötöt"
-                          value={selectedPlayer.assists || 0}
-                          icon="🎯"
-                          color="#06b6d4"
-                        />
-                        <StatsCard
-                          title="Pisteet"
-                          value={selectedPlayer.points || 0}
-                          icon="🏆"
-                          color="#8b5cf6"
-                        />
-                        <StatsCard
-                          title="Rangaistukset"
-                          value={selectedPlayer.penalties || 0}
-                          icon="🟨"
-                          color="#ef4444"
-                        />
+                        {selectedPlayer.position === 'Maalivahti' ? (
+                          // Goalie stats cards
+                          <>
+                            <StatsCard
+                              title="Ottelut"
+                              value={selectedPlayer.games || 0}
+                              icon="🥅"
+                              color="#10b981"
+                            />
+                            <StatsCard
+                              title="Voitot"
+                              value={selectedPlayer.wins || 0}
+                              icon="🏆"
+                              color="#f59e0b"
+                            />
+                            <StatsCard
+                              title="Torjunta%"
+                              value={selectedPlayer.savePercentage ? `${selectedPlayer.savePercentage.toFixed(1)}%` : '0%'}
+                              icon="🛡️"
+                              color="#8b5cf6"
+                            />
+                            <StatsCard
+                              title="Nollapelit"
+                              value={selectedPlayer.shutouts || 0}
+                              icon="🚫"
+                              color="#06b6d4"
+                            />
+                          </>
+                        ) : (
+                          // Regular player stats cards
+                          <>
+                            <StatsCard
+                              title="Maalit"
+                              value={selectedPlayer.goals || 0}
+                              icon="⚽"
+                              color="#f97316"
+                            />
+                            <StatsCard
+                              title="Syötöt"
+                              value={selectedPlayer.assists || 0}
+                              icon="🎯"
+                              color="#06b6d4"
+                            />
+                            <StatsCard
+                              title="Pisteet"
+                              value={selectedPlayer.points || 0}
+                              icon="🏆"
+                              color="#8b5cf6"
+                            />
+                            <StatsCard
+                              title="Rangaistukset"
+                              value={selectedPlayer.penalties || 0}
+                              icon="🟨"
+                              color="#ef4444"
+                            />
+                          </>
+                        )}
                       </div>
                     </div>
                     
@@ -910,26 +1114,55 @@ export default function Team() {
                       <div>
                         <h4 className="text-lg font-semibold text-white mb-4">Uratilastot</h4>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                          <div className="bg-white/10 rounded-lg p-4 text-center">
-                            <div className="text-2xl font-bold text-orange-400">{selectedPlayer.careerStats.totalGoals}</div>
-                            <div className="text-white/70 text-sm">Maalit yhteensä</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-4 text-center">
-                            <div className="text-2xl font-bold text-cyan-400">{selectedPlayer.careerStats.totalAssists}</div>
-                            <div className="text-white/70 text-sm">Syötöt yhteensä</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-4 text-center">
-                            <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats.totalPoints}</div>
-                            <div className="text-white/70 text-sm">Pisteet yhteensä</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-4 text-center">
-                            <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats.totalPenalties || 0}</div>
-                            <div className="text-white/70 text-sm">Rangaistukset yhteensä</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-4 text-center">
-                            <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.seasonsPlayed}</div>
-                            <div className="text-white/70 text-sm">Kaudet</div>
-                          </div>
+                          {selectedPlayer.position === 'Maalivahti' ? (
+                            // Goalie career stats
+                            <>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.totalWins || 0}</div>
+                                <div className="text-white/70 text-sm">Voitot yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-blue-400">{selectedPlayer.careerStats.totalShutouts || 0}</div>
+                                <div className="text-white/70 text-sm">Nollapelit yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats.totalSaves || 0}</div>
+                                <div className="text-white/70 text-sm">Torjunnat yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats.totalGoalsAgainst || 0}</div>
+                                <div className="text-white/70 text-sm">Päästetyt yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.seasonsPlayed}</div>
+                                <div className="text-white/70 text-sm">Kaudet</div>
+                              </div>
+                            </>
+                          ) : (
+                            // Regular player career stats
+                            <>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-orange-400">{selectedPlayer.careerStats.totalGoals}</div>
+                                <div className="text-white/70 text-sm">Maalit yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-cyan-400">{selectedPlayer.careerStats.totalAssists}</div>
+                                <div className="text-white/70 text-sm">Syötöt yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats.totalPoints}</div>
+                                <div className="text-white/70 text-sm">Pisteet yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats.totalPenalties || 0}</div>
+                                <div className="text-white/70 text-sm">Rangaistukset yhteensä</div>
+                              </div>
+                              <div className="bg-white/10 rounded-lg p-4 text-center">
+                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.seasonsPlayed}</div>
+                                <div className="text-white/70 text-sm">Kaudet</div>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     )}
@@ -958,7 +1191,14 @@ export default function Team() {
                     {/* Performance Chart */}
                     <div>
                       <PlayerRadarChart
-                        data={[
+                        data={selectedPlayer.position === 'Maalivahti' ? [
+                          { subject: 'Ottelut', A: selectedPlayer.games || 0 },
+                          { subject: 'Voitot', A: selectedPlayer.wins || 0 },
+                          { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
+                          { subject: 'Torjunnat', A: Math.min((selectedPlayer.saves || 0) / 10, 100) }, // Scale down saves
+                          { subject: 'Nollapelit', A: (selectedPlayer.shutouts || 0) * 10 }, // Scale up shutouts
+                          { subject: 'Voitto%', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 }
+                        ] : [
                           { subject: 'Maalit', A: selectedPlayer.goals || 0 },
                           { subject: 'Syötöt', A: selectedPlayer.assists || 0 },
                           { subject: 'Pisteet', A: selectedPlayer.points || 0 },
@@ -975,27 +1215,59 @@ export default function Team() {
                   // Standard view
                   <div className="grid grid-cols-3 gap-6">
                     <div className="space-y-3">
-                      <div className="bg-white/10 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-orange-400">{selectedPlayer.goals}</div>
-                        <div className="text-white/70 text-xs">Maalit</div>
-                      </div>
-                      <div className="bg-white/10 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-cyan-400">{selectedPlayer.assists}</div>
-                        <div className="text-white/70 text-xs">Syötöt</div>
-                      </div>
-                      <div className="bg-white/10 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-purple-400">{selectedPlayer.points}</div>
-                        <div className="text-white/70 text-xs">Pisteet</div>
-                      </div>
-                      <div className="bg-white/10 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-red-400">{selectedPlayer.penalties || 0}</div>
-                        <div className="text-white/70 text-xs">Rangaistukset</div>
-                      </div>
+                      {selectedPlayer.position === 'Maalivahti' ? (
+                        // Goalie standard stats
+                        <>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-green-400">{selectedPlayer.games || 0}</div>
+                            <div className="text-white/70 text-xs">Ottelut</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-orange-400">{selectedPlayer.wins || 0}</div>
+                            <div className="text-white/70 text-xs">Voitot</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-purple-400">{selectedPlayer.savePercentage ? `${selectedPlayer.savePercentage.toFixed(1)}%` : '0%'}</div>
+                            <div className="text-white/70 text-xs">Torjunta%</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-blue-400">{selectedPlayer.shutouts || 0}</div>
+                            <div className="text-white/70 text-xs">Nollapelit</div>
+                          </div>
+                        </>
+                      ) : (
+                        // Regular player standard stats
+                        <>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-orange-400">{selectedPlayer.goals}</div>
+                            <div className="text-white/70 text-xs">Maalit</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-cyan-400">{selectedPlayer.assists}</div>
+                            <div className="text-white/70 text-xs">Syötöt</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-purple-400">{selectedPlayer.points}</div>
+                            <div className="text-white/70 text-xs">Pisteet</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="text-lg font-bold text-red-400">{selectedPlayer.penalties || 0}</div>
+                            <div className="text-white/70 text-xs">Rangaistukset</div>
+                          </div>
+                        </>
+                      )}
                     </div>
                     
                     <div className="col-span-2">
                       <PlayerRadarChart
-                        data={[
+                        data={selectedPlayer.position === 'Maalivahti' ? [
+                          { subject: 'Ottelut', A: stats.length > 0 ? ((selectedPlayer.games || 0) / Math.max(...stats.map(s => s.games || 1))) * 100 : 0 },
+                          { subject: 'Voitot', A: stats.length > 0 ? ((selectedPlayer.wins || 0) / Math.max(...stats.map(s => s.wins || 1))) * 100 : 0 },
+                          { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
+                          { subject: 'Nollapelit', A: stats.length > 0 ? ((selectedPlayer.shutouts || 0) / Math.max(...stats.map(s => s.shutouts || 1))) * 100 : 0 },
+                          { subject: 'Voittosuhde', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 },
+                          { subject: 'Torjunnat', A: stats.length > 0 ? ((selectedPlayer.saves || 0) / Math.max(...stats.map(s => s.saves || 1))) * 100 : 0 }
+                        ] : [
                           { subject: 'Maalit', A: stats.length > 0 ? (selectedPlayer.goals / Math.max(...stats.map(s => s.goals))) * 100 : 0 },
                           { subject: 'Syötöt', A: stats.length > 0 ? (selectedPlayer.assists / Math.max(...stats.map(s => s.assists))) * 100 : 0 },
                           { subject: 'Pisteet', A: stats.length > 0 ? (selectedPlayer.points / Math.max(...stats.map(s => s.points))) * 100 : 0 },

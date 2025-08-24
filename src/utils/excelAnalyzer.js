@@ -957,6 +957,12 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 ,"Mäenranta, Ville",18,3,3,6,2,0,0,0,0,0,0,0,1,2,0
 ,"Kananen, Henri",16,1,4,5,1,0,0,0,0,0,0,0,0,1,0
 ,"Virtanen, Joonas",12,2,2,4,0,0,0,0,0,0,0,0,0,0,0
+
+,,,,,,,,,,,,,,,,
+KAUSI 2024-2025,III-DIV - LR LOHKO A,,,MAALIVAHDIT,,,,,,,,,,,,
+,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Ahven, Mika (MV)",14,0.618867,3.428571,265,48,8,0
+,"Virta, Matias (MV)",8,0.748427,5.125,159,40,1,0
 ,,,,,,,,,,,,,,,,
 KAUSI 2023-2024,IV-DIV - LR LOHKO A,,,,,,,,,,,,,,,,
 PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
@@ -968,6 +974,12 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 ,"Tuokko, Aleksi",17,9,4,13,2,0,2,0,0,0,0,0,1,2,0
 ,"Nieminen, Kalle",16,3,5,8,1,0,0,0,0,0,0,0,1,1,0
 ,"Korhonen, Jari",14,2,4,6,2,0,0,0,0,0,0,0,0,2,0
+,"Ahven, Mika",12,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,"Virta, Matias",10,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,,,,,,,,,,,,,,,,
+KAUSI 2023-2024,MAALIVAHDIT IV-DIV - LR LOHKO A,,,,,,,,,,,,,,,,
+MAALIVAHDIT,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Ahven, Mika",12,92.8,2.5,128,30,6,1
 ,,,,,,,,,,,,,,,,
 KAUSI 2023-2024,III-DIV - Karsinnat,,,,,,,,,,,,,,,,
 PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
@@ -977,6 +989,13 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 ,"Vainio, Joni",13,4,6,10,0,0,0,0,0,0,0,0,2,0,0
 ,"Laaksonen, Jimi",11,3,4,7,1,0,0,0,0,0,0,0,0,1,0
 ,"Mäkelä, Antti",10,2,3,5,0,0,0,0,0,0,0,0,1,0,0
+,"Ahven, Mika",8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,"Virta, Matias",6,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,,,,,,,,,,,,,,,,
+KAUSI 2023-2024,MAALIVAHDIT III-DIV - Karsinnat,,,,,,,,,,,,,,,,
+MAALIVAHDIT,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Ahven, Mika",8,89.5,3.1,95,25,4,0
+,"Virta, Matias",6,87.3,3.5,72,21,2,0
 ,,,,,,,,,,,,,,,,
 KAUSI 2023-2024,IV-DIV + KARS,,,,,,,,,,,,,,,,
 PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
@@ -986,6 +1005,13 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 ,"Kiilunen, Juha",17,3,7,10,3,0,1,0,0,0,0,0,1,3,0
 ,"Mäenranta, Ville",15,4,4,8,2,0,0,0,0,0,0,0,1,2,0
 ,"Laitinen, Sami",12,1,3,4,1,0,0,0,0,0,0,0,0,1,0
+,"Ahven, Mika",10,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,"Virta, Matias",8,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,,,,,,,,,,,,,,,,
+KAUSI 2023-2024,MAALIVAHDIT IV-DIV + KARS,,,,,,,,,,,,,,,,
+MAALIVAHDIT,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Ahven, Mika",10,91.3,2.8,118,28,5,1
+,"Virta, Matias",8,89.2,3.1,75,25,3,0
 ,,,,,,,,,,,,,,,,
 KAUSI 2022-2023,Regular Season,,,,,,,,,,,,,,,,
 PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
@@ -995,7 +1021,14 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
 ,"Nykänen, Akseli",15,8,4,12,1,0,1,0,0,0,0,0,0,1,0
 ,"Laine, Jukka-Pekka",19,4,6,10,2,0,0,0,0,0,0,0,2,2,0
 ,"Tuokko, Aleksi",14,7,3,10,1,0,1,0,0,0,0,0,1,1,0
-,"Järvinen, Mikko",13,3,4,7,0,0,0,0,0,0,0,0,1,0,0`;
+,"Järvinen, Mikko",13,3,4,7,0,0,0,0,0,0,0,0,1,0,0
+,"Ahven, Mika",18,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,"Virta, Matias",14,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+,,,,,,,,,,,,,,,,
+KAUSI 2022-2023,MAALIVAHDIT Regular Season,,,,,,,,,,,,,,,,
+MAALIVAHDIT,O,T%,PMO,T,PM,V,NP,,,,,,,,,,
+,"Ahven, Mika",18,93.7,2.2,168,39,10,3
+,"Virta, Matias",14,92.1,2.5,145,35,8,2`;
   
   console.log('📄 Creating comprehensive multi-division test CSV...');
   
@@ -1015,13 +1048,13 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
   
   console.log('✅ Comprehensive multi-division test CSV created and saved!');
   console.log('📊 Expected seasons:');
-  console.log('  - 2024-2025 (Regular Season) - 12 players');
-  console.log('  - 2023-2024 (IV-DIV LR LOHKO A) - 8 players');
-  console.log('  - 2023-2024 (III-DIV Karsinnat) - 6 players');
-  console.log('  - 2023-2024 (IV-DIV KARS) - 6 players');
-  console.log('  - 2022-2023 (Regular Season) - 7 players');
+  console.log('  - 2024-2025 (Regular Season) - 13 players (including Mika Ahven as goalie)');
+  console.log('  - 2023-2024 (IV-DIV LR LOHKO A) - 9 players (including Mika Ahven as goalie)');
+  console.log('  - 2023-2024 (III-DIV Karsinnat) - 7 players (including Mika Ahven as goalie)');
+  console.log('  - 2023-2024 (IV-DIV KARS) - 7 players (including Mika Ahven as goalie)');
+  console.log('  - 2022-2023 (Regular Season) - 8 players (including Mika Ahven as goalie)');
+  console.log('ℹ️ Note: Mika Ahven is a goalie with 0 goals and 0 assists in all seasons');
   console.log('ℹ️ Note: Some players appear in multiple seasons, some only in specific seasons');
-  console.log('ℹ️ Note: Pelaaja #3 has been removed from all seasons');
   
   return { success: true, csvContent: csvContent };
 }
@@ -1154,14 +1187,24 @@ function parseOriginalFormatCSV(lines) {
           }
         }
         
+        // Check if this is a goalie section - handle multiple patterns
+        const isGoalieSection = line.toLowerCase().includes('maalivahdit') || 
+                               line.toLowerCase().includes('goalie') ||
+                               line.toLowerCase().includes('maalivahti') ||
+                               line.includes(',,,MAALIVAHDIT') ||
+                               line.includes(',,MAALIVAHDIT');
+        
+        console.log(`🔍 Checking line for goalie section: "${line}" -> isGoalie: ${isGoalieSection}`);
+        
         seasonSections.push({
           season: uniqueSeasonId,  // Use unique identifier
           baseYear: baseYear,     // Keep original year
           division: divisionInfo,
           headerLine: i,
-          fullHeader: line
+          fullHeader: line,
+          isGoalieSection: isGoalieSection
         });
-        console.log(`📅 Found season section: ${uniqueSeasonId} (${divisionInfo}) at line ${i}`);
+        console.log(`📅 Found season section: ${uniqueSeasonId} (${divisionInfo}) ${isGoalieSection ? '[GOALIES]' : '[PLAYERS]'} at line ${i}`);
       }
     }
   }
@@ -1174,14 +1217,28 @@ function parseOriginalFormatCSV(lines) {
     const endLine = sectionIndex < seasonSections.length - 1 ? 
                    seasonSections[sectionIndex + 1].headerLine : lines.length;
     
-    console.log(`📄 Processing ${section.season} ${section.division} from line ${startLine} to ${endLine}`);
+    console.log(`📄 Processing ${section.season} ${section.division} ${section.isGoalieSection ? '[GOALIES]' : '[PLAYERS]'} from line ${startLine} to ${endLine}`);
     
     // Find the column headers for this section
     let headerRowIndex = -1;
     for (let i = startLine; i < Math.min(startLine + 3, endLine); i++) {
-      if (lines[i] && (lines[i].includes('O,M,S,P') || lines[i].includes('PELAAJAT'))) {
-        headerRowIndex = i;
-        break;
+      if (lines[i]) {
+        const line = lines[i].toLowerCase();
+        if (section.isGoalieSection) {
+          // Look for goalie headers: O,T%,PMO,T,PM,V,NP or just ,O,T%,PMO
+          if (line.includes('o,t%,pmo') || line.includes(',o,t%,pmo') || line.includes('maalivahdit')) {
+            headerRowIndex = i;
+            console.log(`🥅 Found goalie header at line ${i}: ${lines[i]}`);
+            break;
+          }
+        } else {
+          // Look for regular player headers: O,M,S,P
+          if (line.includes('o,m,s,p') || line.includes('pelaajat')) {
+            headerRowIndex = i;
+            console.log(`⚽ Found player header at line ${i}: ${lines[i]}`);
+            break;
+          }
+        }
       }
     }
     
@@ -1206,7 +1263,8 @@ function parseOriginalFormatCSV(lines) {
       for (let col = 0; col < Math.min(3, cells.length); col++) {
         const cellValue = safeStringValue(cells[col]);
         if (cellValue.length > 3 && /^[A-Za-zÀ-ſ\s\.,\-]+$/.test(cellValue) && 
-            !cellValue.includes('KAUSI') && !cellValue.toLowerCase().includes('pelaajat')) {
+            !cellValue.includes('KAUSI') && !cellValue.toLowerCase().includes('pelaajat') && 
+            !cellValue.toLowerCase().includes('maalivahdit')) {
           playerNameRaw = cellValue;
           nameColumnIndex = col;
           break;
@@ -1215,31 +1273,77 @@ function parseOriginalFormatCSV(lines) {
       
       if (!playerNameRaw || nameColumnIndex === -1) continue;
       
-      // Convert name format
-      const playerName = playerNameRaw.includes(',') ? 
+      // Convert name format and clean up (MV) indicators
+      let playerName = playerNameRaw.includes(',') ? 
         playerNameRaw.split(',').map(part => part.trim()).reverse().join(' ') : 
         playerNameRaw;
       
-      // Extract stats - adjust column indices based on where we found the name
-      const statsStart = nameColumnIndex + 1;
-      const games = safeNumberValue(cells[statsStart]);
-      const goals = safeNumberValue(cells[statsStart + 1]);
-      const assists = safeNumberValue(cells[statsStart + 2]);
-      const points = safeNumberValue(cells[statsStart + 3]);
-      const penalties = safeNumberValue(cells[statsStart + 4]);
+      // Remove (MV) or other position indicators from name
+      playerName = playerName.replace(/\s*\([^)]*\)\s*/g, '').trim();
       
-      // Validate reasonable hockey stats
-      if (goals > 200 || assists > 300 || points > 400 || games > 100) {
-        console.log(`⚠️ Skipping ${playerName} - unrealistic stats:`, { goals, assists, points, games });
-        continue;
-      }
+      console.log(`📝 Processing player: "${playerNameRaw}" -> "${playerName}" in ${section.isGoalieSection ? 'GOALIE' : 'PLAYER'} section`);
       
-      // Only include players with some stats
-      if (games > 0 || goals > 0 || assists > 0) {
-        const player = {
+      
+      let player;
+      
+      if (section.isGoalieSection) {
+        // Parse goalie stats: O, T%, PMO, T, PM, V, NP
+        const statsStart = nameColumnIndex + 1;
+        const games = safeNumberValue(cells[statsStart]);
+        let savePercentage = safeNumberValue(cells[statsStart + 1]);
+        const goalsAgainstAverage = safeNumberValue(cells[statsStart + 2]);
+        const saves = safeNumberValue(cells[statsStart + 3]);
+        const goalsAgainst = safeNumberValue(cells[statsStart + 4]);
+        const wins = safeNumberValue(cells[statsStart + 5]);
+        const shutouts = safeNumberValue(cells[statsStart + 6]);
+        
+        // Convert decimal save percentage to percentage (0.618 -> 61.8%)
+        if (savePercentage > 0 && savePercentage < 1) {
+          savePercentage = savePercentage * 100;
+        }
+        
+        player = {
           name: playerName,
-          season: section.season,      // This now includes division info
-          baseYear: section.baseYear,  // Original year for grouping
+          season: section.season,
+          baseYear: section.baseYear,
+          division: section.division,
+          position: 'Maalivahti',
+          games: games,
+          goals: 0,  // Goalies don't score
+          assists: 0,  // Goalies don't get assists
+          points: 0,  // Goalies don't get points
+          penalties: 0,
+          // Goalie-specific stats
+          savePercentage: savePercentage,
+          goalsAgainstAverage: goalsAgainstAverage,
+          saves: saves,
+          goalsAgainst: goalsAgainst,
+          wins: wins,
+          shutouts: shutouts,
+          source: 'csv-complex-goalie',
+          lineNumber: i + 1
+        };
+        
+        console.log(`🥅 PARSED GOALIE: ${playerName} in ${section.season}:`, player);
+      } else {
+        // Parse regular player stats: O, M, S, P, J, etc.
+        const statsStart = nameColumnIndex + 1;
+        const games = safeNumberValue(cells[statsStart]);
+        const goals = safeNumberValue(cells[statsStart + 1]);
+        const assists = safeNumberValue(cells[statsStart + 2]);
+        const points = safeNumberValue(cells[statsStart + 3]);
+        const penalties = safeNumberValue(cells[statsStart + 4]);
+        
+        // Validate reasonable hockey stats
+        if (goals > 200 || assists > 300 || points > 400 || games > 100) {
+          console.log(`⚠️ Skipping ${playerName} - unrealistic stats:`, { goals, assists, points, games });
+          continue;
+        }
+        
+        player = {
+          name: playerName,
+          season: section.season,
+          baseYear: section.baseYear,
           division: section.division,
           games: games,
           goals: goals,
@@ -1249,12 +1353,15 @@ function parseOriginalFormatCSV(lines) {
           source: 'csv-complex',
           lineNumber: i + 1
         };
-        
+      }
+      
+      // Only include players with some stats
+      if (player.games > 0 || player.goals > 0 || player.assists > 0 || player.saves > 0) {
         players.push(player);
         
         // Special logging for Mika
         if (playerName.toLowerCase().includes('mika')) {
-          console.log(`🎯 MIKA in ${section.season} ${section.division} - Line ${i + 1}:`, player);
+          console.log(`🎯 MIKA in ${section.season} ${section.division} ${section.isGoalieSection ? '[GOALIE]' : '[PLAYER]'} - Line ${i + 1}:`, player);
         }
       }
     }
@@ -1315,7 +1422,7 @@ export async function getPlayerStatsForSeason(targetSeason = '2024-2025') {
       }
       
       if (seasonData) {
-        return {
+        const playerForSeason = {
           ...player,
           games: seasonData.games,
           goals: seasonData.goals,
@@ -1326,6 +1433,19 @@ export async function getPlayerStatsForSeason(targetSeason = '2024-2025') {
           division: seasonData.division,
           baseYear: seasonData.baseYear
         };
+        
+        // Add goalie-specific stats if applicable
+        if (seasonData.position === 'Maalivahti' || player.position === 'Maalivahti') {
+          playerForSeason.position = 'Maalivahti';
+          playerForSeason.savePercentage = seasonData.savePercentage || player.savePercentage;
+          playerForSeason.goalsAgainstAverage = seasonData.goalsAgainstAverage || player.goalsAgainstAverage;
+          playerForSeason.saves = seasonData.saves || player.saves;
+          playerForSeason.goalsAgainst = seasonData.goalsAgainst || player.goalsAgainst;
+          playerForSeason.wins = seasonData.wins || player.wins;
+          playerForSeason.shutouts = seasonData.shutouts || player.shutouts;
+        }
+        
+        return playerForSeason;
       }
       
       // If no data for this season, return null
@@ -1387,7 +1507,8 @@ export async function getPlayerStatsFromCSV() {
       
       const key = player.name.toLowerCase();
       if (!playersByName.has(key)) {
-        playersByName.set(key, {
+        // Create player record based on whether it's a goalie or regular player
+        const baseRecord = {
           name: player.name,
           seasons: [],
           // Latest season stats as primary
@@ -1397,11 +1518,27 @@ export async function getPlayerStatsFromCSV() {
           points: player.points,
           penalties: player.penalties,
           season: player.season
-        });
+        };
+        
+        // Add goalie-specific properties if this is a goalie
+        if (player.position === 'Maalivahti') {
+          baseRecord.position = 'Maalivahti';
+          baseRecord.savePercentage = player.savePercentage;
+          baseRecord.goalsAgainstAverage = player.goalsAgainstAverage;
+          baseRecord.saves = player.saves;
+          baseRecord.goalsAgainst = player.goalsAgainst;
+          baseRecord.wins = player.wins;
+          baseRecord.shutouts = player.shutouts;
+          console.log(`🥅 CREATED GOALIE RECORD: ${player.name}:`, baseRecord);
+        }
+        
+        playersByName.set(key, baseRecord);
       }
       
       const playerRecord = playersByName.get(key);
-      playerRecord.seasons.push({
+      
+      // Create season record with appropriate stats
+      const seasonRecord = {
         season: player.season,
         baseYear: player.baseYear,  // Include base year for sorting
         division: player.division,   // Include division info
@@ -1410,7 +1547,20 @@ export async function getPlayerStatsFromCSV() {
         assists: player.assists,
         points: player.points,
         penalties: player.penalties
-      });
+      };
+      
+      // Add goalie-specific stats to season record if applicable
+      if (player.position === 'Maalivahti') {
+        seasonRecord.position = 'Maalivahti';
+        seasonRecord.savePercentage = player.savePercentage;
+        seasonRecord.goalsAgainstAverage = player.goalsAgainstAverage;
+        seasonRecord.saves = player.saves;
+        seasonRecord.goalsAgainst = player.goalsAgainst;
+        seasonRecord.wins = player.wins;
+        seasonRecord.shutouts = player.shutouts;
+      }
+      
+      playerRecord.seasons.push(seasonRecord);
       
       // Use the latest season as primary stats (prefer 2024-2025 or most recent)
       const currentSeasonYear = player.baseYear || player.season;
@@ -1424,6 +1574,17 @@ export async function getPlayerStatsFromCSV() {
         playerRecord.points = player.points;
         playerRecord.penalties = player.penalties;
         playerRecord.season = player.season;
+        
+        // Update goalie-specific stats if this is a goalie
+        if (player.position === 'Maalivahti') {
+          playerRecord.position = 'Maalivahti';
+          playerRecord.savePercentage = player.savePercentage;
+          playerRecord.goalsAgainstAverage = player.goalsAgainstAverage;
+          playerRecord.saves = player.saves;
+          playerRecord.goalsAgainst = player.goalsAgainst;
+          playerRecord.wins = player.wins;
+          playerRecord.shutouts = player.shutouts;
+        }
       }
     });
     
