@@ -4,30 +4,17 @@ import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import PageTransition from "./components/PageTransition";
 import { useEffect } from "react";
-import { FIXTURES } from "./pages/Matches";
 
 const Home = lazy(() => import("./pages/Home"));
 const Team = lazy(() => import("./pages/Team"));
-const Matches = lazy(() => import("./pages/Matches"));
 const News = lazy(() => import("./pages/News"));
 const Contact = lazy(() => import("./pages/Contact"));
 const History = lazy(() => import("./pages/History"));
 const Calendar = lazy(() => import("./pages/Calendar"));
-
-function useMatchDayTheme() {
-  useEffect(() => {
-    const pad = (n) => String(n).padStart(2, "0");
-    const d = new Date();
-    const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; // local date
-    const isMatchDay = FIXTURES.some(f => f.date === today);
-    document.body.classList.toggle("match-day", isMatchDay);
-    return () => document.body.classList.remove("match-day");
-  }, []);
-}
+const Statistics = lazy(() => import("./pages/Statistics"));
 
 export default function App() {
   const location = useLocation();
-  useMatchDayTheme();
   return (
     <>
       <Navbar />
@@ -37,7 +24,7 @@ export default function App() {
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<PageTransition><Home /></PageTransition>} />
               <Route path="/joukkue" element={<PageTransition><Team /></PageTransition>} />
-              <Route path="/ottelut" element={<PageTransition><Matches /></PageTransition>} />
+              <Route path="/tilastot" element={<PageTransition><Statistics /></PageTransition>} />
               <Route path="/kalenteri" element={<PageTransition><Calendar /></PageTransition>} />
               <Route path="/uutiset" element={<PageTransition><News /></PageTransition>} />
               <Route path="/yhteys" element={<PageTransition><Contact /></PageTransition>} />

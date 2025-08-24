@@ -6,7 +6,7 @@ const LINKS = [
   { to: "/", label: "Etusivu" },
   { to: "/historia", label: "Historia" },
   { to: "/joukkue", label: "Joukkue" },
-  { to: "/ottelut", label: "Ottelut " },
+  { to: "/tilastot", label: "Tilastot" },
   { to: "/kalenteri", label: "Kalenteri" },
   { to: "/yhteys", label: "Yhteys" },
 ];
