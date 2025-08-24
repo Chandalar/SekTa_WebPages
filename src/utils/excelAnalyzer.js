@@ -1015,12 +1015,13 @@ PELAAJAT,O,M,S,P,J,VM,YV,AV,RL-,RL+,SR,TV,H,TM,IM
   
   console.log('✅ Comprehensive multi-division test CSV created and saved!');
   console.log('📊 Expected seasons:');
-  console.log('  - 2024-2025 (Regular Season) - 13 players');
+  console.log('  - 2024-2025 (Regular Season) - 12 players');
   console.log('  - 2023-2024 (IV-DIV LR LOHKO A) - 8 players');
   console.log('  - 2023-2024 (III-DIV Karsinnat) - 6 players');
   console.log('  - 2023-2024 (IV-DIV KARS) - 6 players');
   console.log('  - 2022-2023 (Regular Season) - 7 players');
   console.log('ℹ️ Note: Some players appear in multiple seasons, some only in specific seasons');
+  console.log('ℹ️ Note: Pelaaja #3 has been removed from all seasons');
   
   return { success: true, csvContent: csvContent };
 }

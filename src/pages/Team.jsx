@@ -11,15 +11,9 @@ const PLAYERS = [
   { name: "Petri Vikman", role: "Hyökkääjä", img: "/Petri.jpg", video: "/Petri.mp4", number: 22 },
   { name: "Miika Oja-Nisula", role: "Hyökkääjä", img: "/Miika.jpg", video: "/Miika.mp4", number: 66 },
   { name: "Akseli Nykänen", role: "Hyökkääjä", img: "/Akseli.jpg", video: "/Akseli.mp4", number: 15 },
-  { name: "Jukka-Pekka Laine, aka Juki", role: "Hyökkääjä", img: "/Juki.jpg", video: "/Juki.mp4", number: 11 },
-  { name: "Aleksi Tuokko, aka Alex", role: "Hyökkääjä", img: "/Aleksi.jpg", video: "/Aleksi.mp4", number: 97 },
   { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
-  { name: "Jimi Laaksonen, aka Jimbo", role: "Hyökkääjä", img: "/Jimi.jpg", video: "/Jimi.mp4", number: 20 },
   { name: "Vesa Halme", role: "Puolustaja", img: "/Vesku.jpg", video: "/Vesku.mp4", number: 55 },
-  { name: "Juha Kiilunen aka Masto", role: "Puolustaja", img: "/Masto.jpg", video: "/Masto.mp4", number: 71 },
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
-  { name: "Henri Kananen aka Kana", role: "Puolustaja", img: "/Kananen.jpg", video: "/Kananen.mp4", number: 42 },
-  { name: "Pelaaja #3", role: "Hyökkääjä", img: "/SekTa_LOGO_ilman_tausta.png", number: 27 },
 ];
 
 function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
