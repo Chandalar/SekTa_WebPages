@@ -3,7 +3,8 @@ import Reveal from "../components/Reveal";
 
 export default function Contact() {
   return (
-    <section className="max-w-xl mx-auto px-4 py-12 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <section className="max-w-xl mx-auto px-4 py-12 text-white">
       <h2 className="text-2xl font-bold text-brand text-center mb-6">Yhteystiedot</h2>
 
       <Reveal>
@@ -62,8 +63,16 @@ export default function Contact() {
           <p className="text-center text-white/70 text-sm">
             Voit olla yhteydessä puhelimitse, sähköpostilla tai seuraa meitä Instagramissa.
           </p>
+          
+          {/* Hidden admin link */}
+          <div className="text-center mt-4">
+            <a href="/admin" className="text-white/20 hover:text-white/40 text-xs transition-colors">
+              ·
+            </a>
+          </div>
         </div>
       </Reveal>
-    </section>
+      </section>
+    </div>
   );
 }

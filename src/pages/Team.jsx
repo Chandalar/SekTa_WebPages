@@ -14,7 +14,7 @@ const PLAYERS = [
   { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
   { name: "Vesa Halme", role: "Puolustaja", img: "/Vesku.jpg", video: "/Vesku.mp4", number: 55 },
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
-  { name: "Mika Ahven", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 1 },
+  { name: "Mika Ahven", role: "Maalivahti", img: "/Ahven.jpg", number: 1 },
   { name: "Matias Virta", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 30 },
   { name: "Lassi Liukkonen", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 35 },
 ];

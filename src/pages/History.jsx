@@ -7,7 +7,8 @@ export default function History() {
   ];
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <section className="max-w-6xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-extrabold text-white mb-6 text-center">Historia</h1>
       <Reveal>
         <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -38,6 +39,7 @@ export default function History() {
         </div>
       </Reveal>
       <p className="text-white/60 mt-4 text-sm">Voin hakea nämä luvut suoraan Salibandyliiton tulospalvelusta – sano, jos kytketään live-haku.</p>
-    </section>
+      </section>
+    </div>
   );
 }

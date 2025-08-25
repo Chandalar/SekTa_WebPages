@@ -11,7 +11,8 @@ export default function Calendar() {
   const [showMonthly, setShowMonthly] = useState(false);
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-12 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <section className="max-w-6xl mx-auto px-4 py-12 text-white">
       <h1 className="text-3xl font-extrabold mb-6 text-center">Tapahtumakalenteri</h1>
 
       {/* Tapahtumalista iFrame */}
@@ -117,6 +118,7 @@ export default function Calendar() {
           </div>
         )}
       </div>
-    </section>
+      </section>
+    </div>
   );
 }

@@ -7,6 +7,7 @@ const LINKS = [
   { to: "/historia", label: "Historia" },
   { to: "/joukkue", label: "Joukkue" },
   { to: "/tilastot", label: "Tilastot" },
+  { to: "/taktiikka", label: "Taktiikka" },
   { to: "/kalenteri", label: "Kalenteri" },
   { to: "/yhteys", label: "Yhteys" },
 ];
@@ -37,7 +38,7 @@ export default function Navbar() {
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
-      className={`fixed w-full z-50 transition-all ${scrolled ? "bg-black/70 backdrop-blur-md shadow-lg" : "bg-transparent"}`}
+      className={`fixed w-full z-50 transition-all ${scrolled ? "bg-gradient-to-br from-gray-900/80 via-blue-900/80 to-purple-900/80 backdrop-blur-md shadow-lg" : "bg-gradient-to-br from-gray-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-sm"}`}
       ref={navRef}
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">

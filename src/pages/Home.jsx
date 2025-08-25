@@ -2,9 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { BarChart3, TrendingUp, Users, Target } from "lucide-react";
-import AnimatedBackground from "../components/AnimatedBackground";
 import NimenhuutoWidget from "../components/NimenhuutoWidget";
-import Parallax from "../components/Parallax";
 import Reveal from "../components/Reveal";
 import { StatsCard, AnimatedBarChart } from "../components/Charts";
 import { getAllStats } from "../utils/excelAnalyzer";
@@ -39,27 +37,17 @@ export default function Home() {
   };
 
   return (
-    <div className="relative min-h-screen text-white overflow-x-hidden">
-      <AnimatedBackground />
-
-      {/* HERO PARALLAX with faint background logo */}
-      <div className="relative z-0 h-[90vh] flex items-center justify-center text-center">
-        <Parallax strength={-15} className="absolute inset-0 opacity-10 -z-10 flex items-center justify-center">
-          <img
-            src="/SekTa_LOGO_ilman_tausta.png"
-            alt="SekTa Background Logo"
-            className="w-3/4 max-w-2xl object-contain"
-          />
-        </Parallax>
-
-        <div className="relative z-10 flex flex-col items-center">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white overflow-x-hidden">
+      {/* HERO SECTION with centered logo */}
+      <div className="relative z-10 h-[90vh] flex items-center justify-center text-center">
+        <div className="flex flex-col items-center">
           <motion.img
             src="/SekTa_LOGO_ilman_tausta.png"
             alt="SekTa Logo"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="w-40 sm:w-48 mb-6 drop-shadow-lg"
+            className="w-40 sm:w-48 lg:w-56 mb-8 drop-shadow-2xl"
           />
 
           <motion.h1
@@ -86,6 +74,13 @@ export default function Home() {
               >
                 <BarChart3 size={20} />
                 Katso tilastot
+              </Link>
+              <Link
+                to="/taktiikka"
+                className="px-8 py-4 bg-green-500 hover:bg-green-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
+              >
+                <Target size={20} />
+                Kokoonpanot
               </Link>
             </div>
           </Reveal>

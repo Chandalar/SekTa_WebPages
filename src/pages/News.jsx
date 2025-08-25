@@ -8,7 +8,8 @@ export default function News() {
   ];
 
   return (
-    <section className="max-w-6xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
+      <section className="max-w-6xl mx-auto px-4 py-12">
       <h2 className="text-2xl font-bold text-brand text-center mb-4">Uutiset & Some</h2>
       <div className="grid md:grid-cols-3 gap-4">
         {NEWS.map((n, i) => (
@@ -21,6 +22,7 @@ export default function News() {
           </Reveal>
         ))}
       </div>
-    </section>
+      </section>
+    </div>
   );
 }
