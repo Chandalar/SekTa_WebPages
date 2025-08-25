@@ -15,6 +15,7 @@ import {
   Shield
 } from 'lucide-react';
 import Reveal from '../components/Reveal';
+import { clearStatsCache } from '../utils/csvDataLoader';
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -54,11 +55,14 @@ export default function Admin() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (password === 'sekta') {
+    console.log('Login attempt with password:', password);
+    if (password.trim().toLowerCase() === 'sekta') {
+      console.log('Login successful');
       setIsAuthenticated(true);
       setPassword('');
     } else {
-      alert('Väärä salasana!');
+      console.log('Login failed');
+      alert('Väärä salasana! Kokeile: sekta');
       setPassword('');
     }
   };
@@ -172,6 +176,28 @@ export default function Admin() {
     link.click();
   };
 
+  const exportToCSV = () => {
+    // Create CSV header
+    let csvContent = 'Player,Position,Season,Games,Goals,Assists,Points,Penalties,Number\n';
+    
+    // Add player data
+    players.forEach(player => {
+      csvContent += `${player.name},${player.position},${selectedSeason},${player.games || 0},${player.goals || 0},${player.assists || 0},${player.points || 0},${player.penalties || 0},${player.number || ''}\n`;
+    });
+    
+    // Create and download CSV file
+    const dataBlob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sekta-stats-${selectedSeason}.csv`;
+    link.click();
+    
+    // Clear cache to refresh data
+    clearStatsCache();
+    alert('CSV tiedosto viety! Muista päivittää pää CSV tiedosto (sekta-stats.csv) sivuston juuressa.');
+  };
+
   const importData = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -282,7 +308,15 @@ export default function Admin() {
                 className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
               >
                 <Download size={20} />
-                Vie tiedot
+                Vie JSON
+              </button>
+
+              <button
+                onClick={exportToCSV}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Download size={20} />
+                Vie CSV
               </button>
 
               <label className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors cursor-pointer">

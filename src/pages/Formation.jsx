@@ -12,7 +12,7 @@ import {
   Edit
 } from 'lucide-react';
 import Reveal from '../components/Reveal';
-import { getPlayerStatsFromCSV } from '../utils/excelAnalyzer';
+import { getPlayerStatsFromCSV, getComprehensivePlayerAndGoalieLists } from '../utils/csvDataLoader';
 
 export default function Formation() {
   const [allPlayers, setAllPlayers] = useState([]);
@@ -37,6 +37,8 @@ export default function Formation() {
   ]);
   const [editingFieldId, setEditingFieldId] = useState(null);
   const [editingFieldName, setEditingFieldName] = useState('');
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [touchedPlayer, setTouchedPlayer] = useState(null);
 
   // Player image mapping - maps player names to their actual image filenames
   const playerImageMap = {
@@ -55,7 +57,7 @@ export default function Formation() {
     'Petri': 'Petri.jpg',
     'Ville': 'Ville.jpg',
     'Veikka': 'Veikka.jpg',
-    'Masto': 'Masto.jpg',
+    'Masto': 'Juha.jpg',
     'Opa': 'Opa.jpg'
   };
 
@@ -63,6 +65,12 @@ export default function Formation() {
   const getPlayerImage = (playerName) => {
     return playerImageMap[playerName] || `${playerName.split(' ')[0]}.jpg`;
   };
+
+  // Detect touch device
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+  }, []);
 
   // Load real player data
   useEffect(() => {
@@ -78,10 +86,14 @@ export default function Formation() {
 
   const loadPlayerData = async () => {
     try {
-      console.log('🏒 Loading real player data for floorball formation...');
-      const data = await getPlayerStatsFromCSV();
+      console.log(' Hockey Loading real player data for floorball formation...');
+      setLoading(true);
       
-      if (data && data.players) {
+      // Use the comprehensive data loader to get all players including those from pelaajat.csv
+      const data = await getComprehensivePlayerAndGoalieLists();
+      
+      if (data && (data.players.length > 0 || data.goalies.length > 0)) {
+        // We only want field players, not goalies
         setAllPlayers(data.players);
         setAvailableSeasons(data.seasons || ['2024-2025', '2023-2024']);
         
@@ -91,6 +103,21 @@ export default function Formation() {
         
         console.log(`✅ Loaded ${data.players.length} players from seasons:`, data.seasons);
         console.log('👥 Using season for formation:', lastYear);
+      } else {
+        // Fallback to original method if comprehensive data fails
+        const fallbackData = await getPlayerStatsFromCSV();
+        
+        if (fallbackData && fallbackData.players) {
+          setAllPlayers(fallbackData.players);
+          setAvailableSeasons(fallbackData.seasons || ['2024-2025', '2023-2024']);
+          
+          // Set to last year (second season in list or 2023-2024)
+          const lastYear = fallbackData.seasons?.[1] || '2023-2024';
+          setSelectedSeason(lastYear);
+          
+          console.log(`✅ Loaded ${fallbackData.players.length} players from seasons:`, fallbackData.seasons);
+          console.log('👥 Using season for formation:', lastYear);
+        }
       }
     } catch (error) {
       console.error('Error loading player data:', error);
@@ -397,6 +424,135 @@ export default function Formation() {
     link.click();
   };
 
+  // Add these touch event handlers
+
+  const handleTouchStart = (player) => {
+    if (!isTouchDevice) return;
+    setTouchedPlayer(player);
+  };
+
+  const handleTouchEnd = (e, positionId, fieldName) => {
+    if (!isTouchDevice || !touchedPlayer) return;
+    e.preventDefault();
+    
+    // Update the specific field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].map(pos => {
+        if (pos.id === positionId) {
+          return { ...pos, player: touchedPlayer };
+        }
+        // Remove player from other positions in this field
+        if (pos.player && pos.player.id === touchedPlayer.id) {
+          return { ...pos, player: null };
+        }
+        return pos;
+      })
+    }));
+
+    // Also remove from other fields
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].map(pos => 
+            pos.player && pos.player.id === touchedPlayer.id 
+              ? { ...pos, player: null } 
+              : pos
+          );
+        }
+      });
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handleFieldTouchEnd = (e, fieldName) => {
+    if (!isTouchDevice || !touchedPlayer || !fieldRefs.current[fieldName]) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (touchedPlayer.fromField && touchedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [touchedPlayer.fromField]: prev[touchedPlayer.fromField].filter(p => p.id !== touchedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: touchedPlayer.position || 'Custom',
+      player: {
+        id: touchedPlayer.id,
+        name: touchedPlayer.name,
+        number: touchedPlayer.number,
+        position: touchedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== touchedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== touchedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handlePlayerTouchStart = (e, playerId, fieldName) => {
+    if (!isTouchDevice) return;
+    // Store the player being dragged from the field
+    const player = fieldPlayers[fieldName]?.find(p => p.id === playerId)?.player;
+    if (player) {
+      setTouchedPlayer({ ...player, fromField: fieldName, fromPositionId: playerId });
+    }
+  };
+
+  // Mobile layout adjustments
+  useEffect(() => {
+    // Mobile-specific layout adjustments
+    const adjustForMobile = () => {
+      if (isTouchDevice) {
+        // Make positions slightly larger on mobile for easier touch targets
+        document.documentElement.style.setProperty('--player-size', '18px');
+        document.documentElement.style.setProperty('--field-min-height', '250px');
+      } else {
+        document.documentElement.style.setProperty('--player-size', '14px');
+        document.documentElement.style.removeProperty('--field-min-height');
+      }
+    };
+    
+    adjustForMobile();
+    
+    return () => {
+      // Cleanup
+      document.documentElement.style.removeProperty('--player-size');
+      document.documentElement.style.removeProperty('--field-min-height');
+    };
+  }, [isTouchDevice]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
@@ -423,6 +579,19 @@ export default function Formation() {
             <p className="text-lg text-white/60 mt-2">Kausi: {selectedSeason} • {availablePlayers.length} kenttäpelaajaa saatavilla</p>
           </div>
         </Reveal>
+
+        {/* Mobile Touch Mode Notification */}
+        {isTouchDevice && (
+          <Reveal delay={0.2}>
+            <div className="bg-orange-500/80 text-white p-4 rounded-lg mb-6">
+              <p className="font-bold">Kosketustila käytössä</p>
+              <p className="text-sm">Kosketa ensin pelaajaa, sitten kosketa kenttää tai paikkaa siirtääksesi pelaajan sinne.</p>
+              {touchedPlayer && (
+                <p className="mt-2 font-bold">Valittu pelaaja: {touchedPlayer.name}</p>
+              )}
+            </div>
+          </Reveal>
+        )}
 
         {/* Controls */}
         <Reveal delay={0.1}>
@@ -502,11 +671,12 @@ export default function Formation() {
                 {availablePlayers.map(player => (
                   <motion.div
                     key={player.id}
-                    draggable
+                    draggable={!isTouchDevice}
                     onDragStart={() => handleDragStart(player)}
+                    onTouchStart={() => handleTouchStart(player)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-white/10 border-white/10 hover:border-orange-400/50 cursor-grab active:cursor-grabbing rounded-lg p-3 border transition-colors"
+                    className={`bg-white/10 border-white/10 hover:border-orange-400/50 ${isTouchDevice ? 'active:border-orange-500 active:bg-white/20' : 'cursor-grab active:cursor-grabbing'} rounded-lg p-3 border transition-colors ${touchedPlayer?.id === player.id ? 'border-orange-500 bg-white/20' : ''}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full overflow-hidden relative">
@@ -608,17 +778,18 @@ export default function Formation() {
                     
                     <div
                       ref={el => fieldRefs.current[field.id] = el}
-                      className={`relative w-full aspect-[2/1] rounded-lg border-4 border-white/20 overflow-hidden shadow-2xl ${
+                      className={`relative w-full aspect-[2/1] min-h-[var(--field-min-height,auto)] rounded-lg border-4 border-white/20 overflow-hidden shadow-2xl ${
                         field.type === 'players' 
                           ? 'bg-gradient-to-b from-green-600 to-green-700' 
                           : 'bg-contain bg-center bg-no-repeat'
-                      }`}
+                      } ${touchedPlayer ? 'border-orange-400' : ''}`}
                       style={field.type === 'tactics' ? { 
                         backgroundImage: 'url(/salibandykentta.png)', 
                         backgroundColor: '#047857' 
                       } : {}}
                       onDragOver={handleDragOver}
                       onDrop={(e) => handleFieldDrop(e, field.id)}
+                      onTouchEnd={(e) => handleFieldTouchEnd(e, field.id)}
                     >
                       {/* Player positions */}
                       {currentFieldPlayers.map((position) => (
@@ -631,17 +802,19 @@ export default function Formation() {
                           }}
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleDrop(e, position.id, field.id)}
+                          onTouchEnd={(e) => handleTouchEnd(e, position.id, field.id)}
                         >
                           {position.player ? (
                             <motion.div
                               initial={{ scale: 0 }}
                               animate={{ scale: 1 }}
                               className="relative group cursor-move"
-                              draggable
+                              draggable={!isTouchDevice}
                               onDragStart={(e) => handlePlayerDragStart(e, position.id, field.id)}
+                              onTouchStart={(e) => handlePlayerTouchStart(e, position.id, field.id)}
                             >
                               {/* Player Image */}
-                              <div className={`w-14 h-14 rounded-full border-3 shadow-lg overflow-hidden relative ${
+                              <div className={`w-[var(--player-size,14px)] h-[var(--player-size,14px)] rounded-full border-3 shadow-lg overflow-hidden relative ${
                                 position.role === 'Hyökkääjä' ? 'border-orange-500' : 
                                 position.role === 'Puolustaja' ? 'border-cyan-500' :
                                 'border-purple-500'
@@ -681,10 +854,20 @@ export default function Formation() {
                     </div>
 
                     <div className="mt-4 text-sm text-white/60">
-                      {field.type === 'players' 
-                        ? 'Vedä pelaajat kentälle nähdäksesi kentälliset'
-                        : 'Vedä pelaajat kentälle tai tyhjille paikoille. Oranssi = Hyökkääjä, Sininen = Puolustaja. Pelaajia voi siirtellä raahaamalla.'
-                      }
+                      {isTouchDevice ? (
+                        <div>
+                          <p className="mb-1">📱 Mobiili: Kosketa pelaajaa ja sitten kosketa kenttää tai tyhjää paikkaa asettaaksesi pelaajan</p>
+                          <p>{field.type === 'players' 
+                            ? 'Kosketa pelaajia asettaaksesi ne kentälle'
+                            : 'Kosketa pelaajia ja sitten tyhjiä paikkoja. Oranssi = Hyökkääjä, Sininen = Puolustaja.'
+                          }</p>
+                        </div>
+                      ) : (
+                        <p>{field.type === 'players' 
+                          ? 'Vedä pelaajat kentälle nähdäksesi kentälliset'
+                          : 'Vedä pelaajat kentälle tai tyhjille paikoille. Oranssi = Hyökkääjä, Sininen = Puolustaja. Pelaajia voi siirtellä raahaamalla.'
+                        }</p>
+                      )}
                     </div>
                   </div>
                 </Reveal>

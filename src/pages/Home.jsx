@@ -5,7 +5,7 @@ import { BarChart3, TrendingUp, Users, Target } from "lucide-react";
 import NimenhuutoWidget from "../components/NimenhuutoWidget";
 import Reveal from "../components/Reveal";
 import { StatsCard, AnimatedBarChart } from "../components/Charts";
-import { getAllStats } from "../utils/excelAnalyzer";
+import { getCurrentSeasonStats } from "../utils/csvDataLoader";
 
 export default function Home() {
   const [stats, setStats] = useState(null);
@@ -17,20 +17,42 @@ export default function Home() {
 
   const loadQuickStats = async () => {
     try {
-      const data = await getAllStats();
-      if (data) {
+      console.log('📈 Loading quick stats from CSV...');
+      const data = await getCurrentSeasonStats();
+      
+      if (data && data.players) {
         const quickStats = {
-          totalGoals: data.players?.reduce((sum, p) => sum + (p.goals || 0), 0) || 0,
-          totalAssists: data.players?.reduce((sum, p) => sum + (p.assists || 0), 0) || 0,
-          totalPoints: data.players?.reduce((sum, p) => sum + (p.points || 0), 0) || 0,
-          totalPlayers: data.players?.length || 0,
-          topScorers: data.players?.sort((a, b) => (b.goals || 0) - (a.goals || 0)).slice(0, 5) || []
+          totalGoals: data.totalGoals || 0,
+          totalAssists: data.totalAssists || 0,
+          totalPoints: data.totalPoints || 0,
+          totalPlayers: data.totalPlayers || 0,
+          topScorers: data.players
+            .sort((a, b) => (b.goals || 0) - (a.goals || 0))
+            .slice(0, 5)
         };
         
+        console.log('✅ Quick stats loaded:', quickStats);
         setStats(quickStats);
+      } else {
+        console.log('⚠️ No data available, using fallback');
+        setStats({
+          totalGoals: 0,
+          totalAssists: 0,
+          totalPoints: 0,
+          totalPlayers: 0,
+          topScorers: []
+        });
       }
     } catch (error) {
-      console.error('Error loading quick stats:', error);
+      console.error('❌ Error loading quick stats:', error);
+      // Fallback to empty stats instead of failing
+      setStats({
+        totalGoals: 0,
+        totalAssists: 0,
+        totalPoints: 0,
+        totalPlayers: 0,
+        topScorers: []
+      });
     } finally {
       setLoading(false);
     }

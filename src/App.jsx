@@ -14,6 +14,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 const Statistics = lazy(() => import("./pages/Statistics"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Formation = lazy(() => import("./pages/Formation"));
+const GoalieStats = lazy(() => import("./components/GoalieStats"));
 
 export default function App() {
   const location = useLocation();
@@ -26,6 +27,7 @@ export default function App() {
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<PageTransition><Home /></PageTransition>} />
               <Route path="/joukkue" element={<PageTransition><Team /></PageTransition>} />
+              <Route path="/maalivahdit" element={<PageTransition><GoalieStats /></PageTransition>} />
               <Route path="/tilastot" element={<PageTransition><Statistics /></PageTransition>} />
               <Route path="/kalenteri" element={<PageTransition><Calendar /></PageTransition>} />
               <Route path="/uutiset" element={<PageTransition><News /></PageTransition>} />

@@ -1,10 +1,36 @@
 // src/Team.jsx
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { BarChart3, TrendingUp, Target, Award, Users, Filter, Calendar } from "lucide-react";
+import { BarChart3, TrendingUp, Target, Award, Users, Filter, Calendar, Shield } from "lucide-react";
 import { AnimatedBarChart, AnimatedPieChart, PlayerRadarChart, StatsCard } from "../components/Charts";
-import { getAllStats, debugExcelStructure, createCSVFromExcel, getPlayerStatsFromCSV, createTestCSV, getPlayerStatsForSeason } from "../utils/excelAnalyzer";
+import { getPlayerStatsFromCSV, generateProperCSV, parseComprehensiveCSVData, getComprehensiveGoalieStats, parseGoaliesFromDedicatedCSV, getComprehensivePlayerAndGoalieLists } from "../utils/csvDataLoader";
+import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
+
+// Player image mapping - maps player names to their actual image filenames
+const playerImageMap = {
+  'Mika Aaltonen': 'mika.jpg',
+  'Mika Ahven': 'Ahven.jpg', 
+  'Jesse Höykinpuro': 'Jesse.jpg',
+  'Henri Kananen': 'Kananen.jpg',
+  'Juha Kiilunen': 'Jimi.jpg',
+  'Jimi Laaksonen': 'Jimi.jpg',
+  'Akseli Nykänen': 'Akseli.jpg',
+  'Niko Nynäs': 'Niko.jpg',
+  'Miika Oja-Nisula': 'Miika.jpg',
+  'Joonas Leppänen': 'Joonas.jpg',
+  'Joni Vainio': 'Joni.jpg', 
+  'Petri Vikman': 'Petri.jpg',
+  'Ville Mäenranta': 'Ville.jpg',
+  'Vesa Halme': 'Veikka.jpg',
+  'Matias Virta': 'Masto.jpg',
+  'Lassi Liukkonen': 'Opa.jpg'
+};
+
+// Function to get player image
+const getPlayerImage = (playerName) => {
+  return playerImageMap[playerName] || `${playerName.split(' ')[0]}.jpg`;
+};
 
 const PLAYERS = [
   { name: "Mika Aaltonen", role: "Hyökkääjä", img: "/mika.jpg", video: "/mika.mp4", number: 19 },
@@ -12,14 +38,19 @@ const PLAYERS = [
   { name: "Miika Oja-Nisula", role: "Hyökkääjä", img: "/Miika.jpg", video: "/Miika.mp4", number: 66 },
   { name: "Akseli Nykänen", role: "Hyökkääjä", img: "/Akseli.jpg", video: "/Akseli.mp4", number: 15 },
   { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
-  { name: "Vesa Halme", role: "Puolustaja", img: "/Vesku.jpg", video: "/Vesku.mp4", number: 55 },
+  { name: "Vesa Halme", role: "Puolustaja", img: "/Veikka.jpg", video: "/Veikka.mp4", number: 55 },
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
   { name: "Mika Ahven", role: "Maalivahti", img: "/Ahven.jpg", number: 1 },
-  { name: "Matias Virta", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 30 },
-  { name: "Lassi Liukkonen", role: "Maalivahti", img: "/SekTa_LOGO_ilman_tausta.png", number: 35 },
+  { name: "Henri Kananen", role: "Hyökkääjä", img: "/Kananen.jpg", number: 27 },
+  { name: "Jesse Höykinpuro", role: "Hyökkääjä", img: "/Jesse.jpg", number: 8 },
+  { name: "Jimi Laaksonen", role: "Hyökkääjä", img: "/Jimi.jpg", number: 11 },
+  { name: "Niko Nynäs", role: "Puolustaja", img: "/Niko.jpg", number: 33 },
+  { name: "Joonas Leppänen", role: "Puolustaja", img: "/Joonas.jpg", number: 44 },
+  { name: "Matias Virta", role: "Maalivahti", img: "/Masto.jpg", number: 30 },
+  { name: "Lassi Liukkonen", role: "Maalivahti", img: "/Opa.jpg", number: 35 },
 ];
 
-function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
+function PlayerCard({ p, index, stats, onStatsClick }) {
   const videoRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const [showStats, setShowStats] = useState(false);
@@ -31,7 +62,7 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
   const playerStats = stats?.find(s => {
     if (!s.name || !p.name) return false;
     
-    // First try exact name match
+    // First try exact name match (most reliable)
     if (s.name.toLowerCase() === p.name.toLowerCase()) {
       console.log(`✅ Exact match: ${p.name} <-> ${s.name}`, s);
       return true;
@@ -49,57 +80,13 @@ function PlayerCard({ p, index, stats, onStatsClick, hasSeasonData }) {
       }
     }
     
-    // Only fall back to partial matching if names are very similar
-    const sFirst = sNameParts[0];
-    const pFirst = pNameParts[0];
-    const sLast = sNameParts[sNameParts.length - 1];
-    const pLast = pNameParts[pNameParts.length - 1];
-    
-    // Avoid "Mika" matching both "Mika Aaltonen" and "Mika Ahven"
-    const match = (sFirst === pFirst && sLast === pLast);
-    if (match) {
-      console.log(`✅ First+Last match: ${p.name} <-> ${s.name}`, s);
-    }
-    return match;
+    return false; // No longer fall back to partial matching
   });
   
   // Special debug for Mika Ahven
   if (p.name.includes('Mika Ahven')) {
     console.log(`🎯 Mika Ahven card - found stats:`, playerStats);
     console.log(`🎯 Available stats in array:`, stats?.filter(s => s.name.toLowerCase().includes('mika')));
-  }
-
-  // If player has no data for this season, show a dimmed/placeholder card
-  if (!hasSeasonData) {
-    return (
-      <motion.article
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 0.3, y: 0 }}
-        transition={{ duration: 0.45, delay: index * 0.06 }}
-        viewport={{ once: true }}
-        className="bg-white/5 backdrop-blur-md rounded-xl p-4 text-center border border-white/5 relative"
-      >
-        <div className="relative mx-auto mb-3 overflow-hidden rounded-lg w-[12rem] h-[24rem] md:w-[15.75rem] md:h-[30.375rem] bg-gray-700/30">
-          <img
-            src={p.img}
-            alt={p.name}
-            className="absolute inset-0 w-full h-full object-cover opacity-30 grayscale"
-            onError={(e) => { e.currentTarget.src = "/SekTa_LOGO_ilman_tausta.png"; }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-            <div className="text-white/60 text-sm text-center">
-              <div>Ei pelannul</div>
-              <div>tällä kaudella</div>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-baseline justify-center gap-2 opacity-50">
-          <strong className="text-white/60">{p.name}</strong>
-          {p.number ? <span className="text-white/40 font-mono">#{p.number}</span> : null}
-        </div>
-        <div className="text-orange-400/50">{p.role}</div>
-      </motion.article>
-    );
   }
 
   return (
@@ -322,6 +309,7 @@ export default function Team() {
   const [availableSeasons, setAvailableSeasons] = useState(['2024-25']);
   const [currentSeasonIndex, setCurrentSeasonIndex] = useState(0);
   const [dynamicPlayers, setDynamicPlayers] = useState([]);
+  const [allPlayersAndGoalies, setAllPlayersAndGoalies] = useState([]); // Store combined player data
 
   useEffect(() => {
     console.log('🚀 Team page mounted, loading player stats...');
@@ -339,29 +327,36 @@ export default function Team() {
     }
   }, [selectedSeason, availableSeasons]);
   
-  useEffect(() => {
-    // Also try to debug Excel immediately
-    const debugImmediately = async () => {
-      try {
-        console.log('🔍 Starting immediate Excel debug...');
-        const debugResult = await debugExcelStructure();
-        console.log('📊 Debug result:', debugResult);
-      } catch (error) {
-        console.error('💥 Debug failed:', error);
-      }
-    };
-    
-    debugImmediately();
-  }, []);
+
 
   const loadPlayerStats = async () => {
     try {
       setLoading(true);
-      console.log('📄 Loading player stats from CSV...');
+      console.log('📄 Loading comprehensive player and goalie data from CSV...');
       
-      // Use CSV data instead of Excel
-      const data = await getPlayerStatsFromCSV();
-      if (data) {
+      // Use comprehensive data loader that combines both players and goalies
+      const data = await getComprehensivePlayerAndGoalieLists();
+      
+      if (data && (data.players.length > 0 || data.goalies.length > 0)) {
+        // For goalies, we want to use data from maalivahdit.csv (in data.goalies)
+        // For regular players, we want to use data from pelaajat.csv (in data.players)
+        // We need to avoid duplicates by filtering out goalies from the players array
+        
+        // Get the list of goalie names
+        const goalieNames = data.goalies.map(goalie => goalie.name.toLowerCase());
+        
+        // Filter out goalies from the players array to avoid duplicates
+        const filteredPlayers = data.players.filter(player => 
+          !goalieNames.includes(player.name.toLowerCase())
+        );
+        
+        // Combine filtered players and goalies into one array
+        // Goalies should come from the dedicated maalivahdit.csv data
+        const combinedPlayersAndGoalies = [...filteredPlayers, ...data.goalies];
+        
+        // Store the combined data for reuse
+        setAllPlayersAndGoalies(combinedPlayersAndGoalies);
+        
         // Use the actual seasons from CSV data
         setAvailableSeasons(data.seasons || ['2024-2025']);
         
@@ -370,85 +365,64 @@ export default function Team() {
         setCurrentSeasonIndex(0);
         
         // Filter players for the current season initially
-        const seasonPlayers = await getPlayersForSeason(latestSeason, data.players);
+        const seasonPlayers = await getPlayersForSeason(latestSeason, combinedPlayersAndGoalies);
         setStats(seasonPlayers);
         
-        console.log(`✅ Loaded ${seasonPlayers.length} players for season ${latestSeason}`);
+        console.log(`✅ Loaded ${seasonPlayers.length} players/goalies for season ${latestSeason}`);
+        console.log(`📊 Total in database: ${filteredPlayers.length} players, ${data.goalies.length} goalies`);
         
         // Debug: Log goalie data specifically
         const goalies = seasonPlayers.filter(p => p.position === 'Maalivahti');
-        console.log(`🥅 Found ${goalies.length} goalies:`, goalies);
+        console.log(`🥅 Found ${goalies.length} goalies in current season:`, goalies.map(g => g.name));
         
-        // Debug: Log Mika's data specifically
-        const mika = seasonPlayers.find(p => 
-          p.name.toLowerCase().includes('mika')
-        );
-        if (mika) {
-          console.log('🎯 Found Mika stats for current season:', mika);
-        }
+        // Debug: Log regular players
+        const regularPlayers = seasonPlayers.filter(p => p.position !== 'Maalivahti');
+        console.log(`🏃 Found ${regularPlayers.length} regular players in current season:`, regularPlayers.map(p => p.name));
       } else {
-        console.log('⚠️ No CSV data available, creating from Excel...');
-        // Try to create CSV from Excel if no data
-        const csvResult = await createCSVFromExcel();
-        if (csvResult.success) {
-          // Retry loading from CSV
-          await loadPlayerStats();
+        console.log('⚠️ No comprehensive data available, falling back to simple CSV...');
+        // Fallback to simple CSV if comprehensive data fails
+        const fallbackData = await getPlayerStatsFromCSV();
+        if (fallbackData) {
+          setAvailableSeasons(fallbackData.seasons || ['2024-2025']);
+          const latestSeason = fallbackData.seasons?.[0] || '2024-2025';
+          setSelectedSeason(latestSeason);
+          setCurrentSeasonIndex(0);
+          const seasonPlayers = await getPlayersForSeason(latestSeason, fallbackData.players);
+          setStats(seasonPlayers);
         }
       }
     } catch (error) {
-      console.error('❌ Error loading CSV player stats:', error);
+      console.error('❌ Error loading comprehensive player stats:', error);
     } finally {
       setLoading(false);
     }
   };
   
   const generateDynamicPlayers = (seasonPlayers) => {
-    console.log('🎭 Generating dynamic player cards for', seasonPlayers.length, 'players');
+    console.log('🎥 Generating dynamic player cards for', seasonPlayers.length, 'players');
     
-    // Get all unique player names from CSV data across all seasons
-    const allPlayerNames = new Set();
-    
-    // Add players from current season
-    seasonPlayers.forEach(player => {
-      if (player.name && player.name.trim().length > 2) {
-        allPlayerNames.add(player.name.trim());
-      }
-    });
-    
-    // Add known static players to ensure they're always shown
-    PLAYERS.forEach(player => {
-      allPlayerNames.add(player.name);
-    });
-    
-    const dynamicPlayerCards = Array.from(allPlayerNames).map((playerName, index) => {
+    // Only show players who have data for the current season
+    const dynamicPlayerCards = seasonPlayers.map((csvPlayer, index) => {
       // Find static player info if available
       const staticPlayer = PLAYERS.find(p => 
-        p.name.toLowerCase().includes(playerName.toLowerCase()) ||
-        playerName.toLowerCase().includes(p.name.toLowerCase())
-      );
-      
-      // Find CSV data for this player in current season
-      const csvPlayer = seasonPlayers.find(p => 
-        p.name.toLowerCase() === playerName.toLowerCase()
+        p.name.toLowerCase() === csvPlayer.name.toLowerCase()
       );
       
       // Create player card with available information
       const playerCard = {
-        name: playerName,
-        role: staticPlayer?.role || 'Pelaaja',
-        img: staticPlayer?.img || '/SekTa_LOGO_ilman_tausta.png',
+        name: csvPlayer.name,
+        role: csvPlayer.position || staticPlayer?.role || 'Pelaaja',
+        img: staticPlayer?.img || `/${getPlayerImage(csvPlayer.name)}`,
         video: staticPlayer?.video || null,
-        number: staticPlayer?.number || null,
-        hasSeasonData: !!csvPlayer,
+        number: csvPlayer.number || staticPlayer?.number || null,
+        hasSeasonData: true, // Since we're only including players with season data
         csvData: csvPlayer
       };
       
       return playerCard;
     });
     
-    console.log('✅ Generated', dynamicPlayerCards.length, 'dynamic player cards');
-    console.log('📊 Players with season data:', dynamicPlayerCards.filter(p => p.hasSeasonData).length);
-    console.log('🚫 Players without season data:', dynamicPlayerCards.filter(p => !p.hasSeasonData).length);
+    console.log('✅ Generated', dynamicPlayerCards.length, 'dynamic player cards (only players with season data)');
     
     return dynamicPlayerCards;
   };
@@ -470,18 +444,28 @@ export default function Team() {
           assists: seasonData.assists,
           points: seasonData.points,
           penalties: seasonData.penalties,
-          season: targetSeason
+          season: targetSeason,
+          position: seasonData.position || player.position
         };
         
         // Add goalie-specific stats if applicable
-        if (seasonData.position === 'Maalivahti' || player.position === 'Maalivahti') {
+        if (seasonData.position?.toLowerCase() === 'maalivahti' || player.position?.toLowerCase() === 'maalivahti') {
           seasonPlayer.position = 'Maalivahti';
-          seasonPlayer.savePercentage = seasonData.savePercentage || player.savePercentage;
-          seasonPlayer.goalsAgainstAverage = seasonData.goalsAgainstAverage || player.goalsAgainstAverage;
-          seasonPlayer.saves = seasonData.saves || player.saves;
-          seasonPlayer.goalsAgainst = seasonData.goalsAgainst || player.goalsAgainst;
-          seasonPlayer.wins = seasonData.wins || player.wins;
-          seasonPlayer.shutouts = seasonData.shutouts || player.shutouts;
+          
+          // Use existing goalie stats if available, otherwise defaults
+          seasonPlayer.savePercentage = seasonData.savePercentage || player.savePercentage || 0;
+          seasonPlayer.goalsAgainstAverage = seasonData.goalsAgainstAverage || player.goalsAgainstAverage || 0;
+          seasonPlayer.saves = seasonData.saves || player.saves || 0;
+          seasonPlayer.goalsAgainst = seasonData.goalsAgainst || player.goalsAgainst || 0;
+          seasonPlayer.wins = seasonData.wins || player.wins || 0;
+          seasonPlayer.shutouts = seasonData.shutouts || player.shutouts || 0;
+          
+          // Goalies always have 0 goals and assists as per requirements
+          seasonPlayer.goals = 0;
+          seasonPlayer.assists = 0;
+          seasonPlayer.points = 0;
+          
+          console.log(`🥅 Processed goalie data for: ${seasonPlayer.name}`, seasonPlayer);
         }
         
         return seasonPlayer;
@@ -503,14 +487,12 @@ export default function Team() {
     
     console.log(`🔄 Changing to season: ${newSeason}`);
     
-    // Load players for the selected season
-    const seasonPlayers = await getPlayersForSeason(newSeason);
+    // Load players for the selected season using the stored combined data
+    const seasonPlayers = await getPlayersForSeason(newSeason, allPlayersAndGoalies);
     setStats(seasonPlayers);
     
     console.log(`✅ Loaded ${seasonPlayers.length} players for season ${newSeason}`);
   };
-  
-  // ... existing code ...
   
   const handlePlayerClick = async (playerData) => {
     if (playerData.specialStats && playerData.name === 'Mika Aaltonen') {
@@ -593,35 +575,26 @@ export default function Team() {
   });
 
   const sortedPlayers = filteredPlayers.sort((a, b) => {
-    // Always sort players with season data first
-    if (a.hasSeasonData && !b.hasSeasonData) return -1;
-    if (!a.hasSeasonData && b.hasSeasonData) return 1;
+    // Since we now only show players with season data, we can simplify the sorting
+    const aStats = stats.find(s => s.name && a.name && 
+      (s.name.toLowerCase().includes(a.name.split(' ')[0].toLowerCase()) ||
+       a.name.toLowerCase().includes(s.name.split(' ')[0]?.toLowerCase())))
+    const bStats = stats.find(s => s.name && b.name && 
+      (s.name.toLowerCase().includes(b.name.split(' ')[0].toLowerCase()) ||
+       b.name.toLowerCase().includes(s.name.split(' ')[0]?.toLowerCase())))
     
-    // For players with data, sort by stats
-    if (a.hasSeasonData && b.hasSeasonData) {
-      const aStats = stats.find(s => s.name && a.name && 
-        (s.name.toLowerCase().includes(a.name.split(' ')[0].toLowerCase()) ||
-         a.name.toLowerCase().includes(s.name.split(' ')[0]?.toLowerCase())))
-      const bStats = stats.find(s => s.name && b.name && 
-        (s.name.toLowerCase().includes(b.name.split(' ')[0].toLowerCase()) ||
-         b.name.toLowerCase().includes(s.name.split(' ')[0]?.toLowerCase())))
-      
-      if (!aStats) return 1;
-      if (!bStats) return -1;
-      
-      return (bStats[sortBy] || 0) - (aStats[sortBy] || 0);
-    }
+    if (!aStats) return 1;
+    if (!bStats) return -1;
     
-    // For players without data, sort alphabetically
-    return a.name.localeCompare(b.name);
+    return (bStats[sortBy] || 0) - (aStats[sortBy] || 0);
   });
 
   const teamTotals = {
     goals: stats.reduce((sum, p) => sum + p.goals, 0),
     assists: stats.reduce((sum, p) => sum + p.assists, 0),
     points: stats.reduce((sum, p) => sum + p.points, 0),
-    players: dynamicPlayers.filter(p => p.hasSeasonData).length, // Only count players with season data
-    totalCards: dynamicPlayers.length // Total cards shown (including inactive)
+    players: dynamicPlayers.length, // All displayed players have season data now
+    totalCards: dynamicPlayers.length // Total cards shown (all have data now)
   };
 
   return (
@@ -630,232 +603,58 @@ export default function Team() {
         {/* Header */}
         <Reveal>
           <div className="text-center mb-12">
-            {/* Season Slider */}
-            <div className="mb-6">
-              <div className="flex items-center justify-center gap-4 mb-4">
-                <Calendar className="text-orange-400" size={24} />
-                <h1 className="text-4xl md:text-5xl font-extrabold text-white">
-                  SekTa Joukkue
-                </h1>
-              </div>
-              
-              {/* Current Season Display */}
-              <div className="mb-4">
-                <div className="text-2xl font-bold text-orange-400">
-                  {selectedSeason}
-                </div>
-                <div className="text-sm text-white/60">
-                  {currentSeasonIndex + 1} / {availableSeasons.length} kautta
-                </div>
-              </div>
-              
-              {/* Season Slider */}
-              <div className="flex items-center justify-center gap-6 max-w-2xl mx-auto">
-                <button 
-                  onClick={() => handleSeasonChange(0)}
-                  className="text-white/70 hover:text-white font-semibold transition-colors"
-                  disabled={currentSeasonIndex === 0}
-                >
-                  Uusin
-                </button>
-                
-                <div className="flex-1 relative">
-                  <input
-                    type="range"
-                    min={0}
-                    max={availableSeasons.length - 1}
-                    value={currentSeasonIndex}
-                    onChange={(e) => handleSeasonChange(parseInt(e.target.value))}
-                    className="w-full h-3 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
-                    style={{
-                      background: `linear-gradient(to right, #f97316 0%, #f97316 ${(currentSeasonIndex / Math.max(1, availableSeasons.length - 1)) * 100}%, #ffffff33 ${(currentSeasonIndex / Math.max(1, availableSeasons.length - 1)) * 100}%, #ffffff33 100%)`
-                    }}
-                  />
-                  <style jsx>{`
-                    .slider::-webkit-slider-thumb {
-                      appearance: none;
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: #f97316;
-                      cursor: pointer;
-                      border: 3px solid white;
-                      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                    }
-                    .slider::-moz-range-thumb {
-                      width: 24px;
-                      height: 24px;
-                      border-radius: 50%;
-                      background: #f97316;
-                      cursor: pointer;
-                      border: 3px solid white;
-                      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-                    }
-                  `}</style>
-                  
-                  {/* Season markers - show every few seasons to avoid crowding */}
-                  <div className="absolute -bottom-8 left-0 right-0">
-                    <div className="flex justify-between text-xs text-white/50 px-3">
-                      {availableSeasons.filter((_, index) => 
-                        index === 0 || 
-                        index === availableSeasons.length - 1 || 
-                        index % Math.max(1, Math.floor(availableSeasons.length / 4)) === 0
-                      ).map((season, displayIndex) => {
-                        const actualIndex = availableSeasons.indexOf(season);
-                        return (
-                          <div 
-                            key={season} 
-                            className={`transition-colors text-center ${
-                              actualIndex === currentSeasonIndex ? 'text-orange-400 font-bold' : ''
-                            }`}
-                            style={{ 
-                              position: 'absolute',
-                              left: `${(actualIndex / Math.max(1, availableSeasons.length - 1)) * 100}%`,
-                              transform: 'translateX(-50%)'
-                            }}
-                          >
-                            <div className="whitespace-nowrap">
-                              {season.split('(')[0].trim()}
-                            </div>
-                            {season.includes('(') && (
-                              <div className="text-xs text-white/40 whitespace-nowrap">
-                                {season.split('(')[1]?.replace(')', '')}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => handleSeasonChange(availableSeasons.length - 1)}
-                  className="text-white/70 hover:text-white font-semibold transition-colors"
-                  disabled={currentSeasonIndex === availableSeasons.length - 1}
-                >
-                  Vanhin
-                </button>
-              </div>
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <Calendar className="text-orange-400" size={32} />
+              <h1 className="text-4xl md:text-5xl font-extrabold text-white">
+                SekTa Joukkue
+              </h1>
             </div>
+            
+            {/* Season Selector */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <Calendar className="text-white/70" size={20} />
+              <span className="text-white/70">Kausi:</span>
+              <select
+                value={selectedSeason}
+                onChange={(e) => {
+                  const newSeason = e.target.value;
+                  const seasonIndex = availableSeasons.indexOf(newSeason);
+                  handleSeasonChange(seasonIndex);
+                }}
+                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white"
+              >
+                {availableSeasons.map(season => (
+                  <option key={season} value={season} className="bg-gray-800">
+                    {season}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Reload Button */}
+            <button 
+              onClick={loadPlayerStats}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition mb-8"
+            >
+              🔄 Päivitä tilastot
+            </button>
             
             <p className="text-xl text-white/70 mb-8 mt-12">
               Tutustu pelaajiin ja heidän suorituksiinsa - {teamTotals.players} aktiivista pelaajaa
             </p>
-            <div className="mb-8 flex justify-center gap-4 flex-wrap">
-              <button 
-                onClick={async () => {
-                  console.log('Creating test CSV with correct stats...');
-                  const result = createTestCSV();
-                  if (result.success) {
-                    alert('Test CSV created with correct Mika stats: 21 games, 14 goals, 4 assists, 18 points!');
-                    // Reload data from CSV
-                    await loadPlayerStats();
-                  }
-                }}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg text-sm"
+            
+            {/* Link to Goalie Statistics */}
+            <div className="mb-6">
+              <Link 
+                to="/maalivahdit"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg"
               >
-                🧪 Create Test CSV (Correct Stats)
-              </button>
-              <button 
-                onClick={() => {
-                  console.log('🔧 MANUAL GOALIE TEST: Injecting goalie stats...');
-                  const testGoalieStats = [
-                    {
-                      name: 'Mika Ahven',
-                      position: 'Maalivahti',
-                      games: 15,
-                      goals: 0,
-                      assists: 0,
-                      points: 0,
-                      penalties: 0,
-                      savePercentage: 94.2,
-                      goalsAgainstAverage: 2.1,
-                      saves: 142,
-                      goalsAgainst: 32,
-                      wins: 8,
-                      shutouts: 2
-                    },
-                    {
-                      name: 'Matias Virta',
-                      position: 'Maalivahti',
-                      games: 12,
-                      goals: 0,
-                      assists: 0,
-                      points: 0,
-                      penalties: 0,
-                      savePercentage: 91.8,
-                      goalsAgainstAverage: 2.4,
-                      saves: 98,
-                      goalsAgainst: 29,
-                      wins: 7,
-                      shutouts: 1
-                    },
-                    ...stats.filter(p => p.name !== 'Mika Ahven' && p.name !== 'Matias Virta')
-                  ];
-                  setStats(testGoalieStats);
-                  alert('Goalie stats injected! Check Mika Ahven and Matias Virta cards.');
-                }}
-                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                🔧 TEST Goalie Stats
-              </button>
-              <button 
-                onClick={async () => {
-                  console.log('📄 Creating CSV from Excel...');
-                  const result = await createCSVFromExcel();
-                  if (result.success) {
-                    alert(`CSV created successfully! ${result.rowCount} rows processed.`);
-                    // Reload data from CSV
-                    await loadPlayerStats();
-                  } else {
-                    alert('Error creating CSV: ' + result.error);
-                  }
-                }}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                📄 Create CSV from Excel
-              </button>
-              <button 
-                onClick={async () => {
-                  console.log('🔍 Loading from CSV...');
-                  const data = await getPlayerStatsFromCSV();
-                  console.log('CSV data:', data);
-                  if (data && data.players) {
-                    const mika = data.players.find(p => 
-                      p.name.toLowerCase().includes('mika')
-                    );
-                    console.log('Found Mika in CSV:', mika);
-                  }
-                }}
-                className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                🔍 Debug CSV Data
-              </button>
-              <button 
-                onClick={async () => {
-                  console.log('🔍 Manual Excel debug triggered...');
-                  const result = await debugExcelStructure();
-                  console.log('📊 Manual debug result:', result);
-                  const allStats = await getAllStats();
-                  console.log('📊 getAllStats result:', allStats);
-                }}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                🐛 Debug Excel Data
-              </button>
-              <button 
-                onClick={loadPlayerStats}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
-              >
-                🔄 Refresh Data
-              </button>
+                <Shield size={20} />
+                Katso kattavat maalivahdin tilastot
+              </Link>
             </div>
-            <div className="text-center mb-4">
-              <span className="text-white/60 text-sm">
-                Players loaded: {stats.length} | Season: {selectedSeason}
-              </span>
-            </div>
+
+
           </div>
         </Reveal>
 
@@ -963,7 +762,6 @@ export default function Team() {
                 p={p} 
                 index={i} 
                 stats={stats}
-                hasSeasonData={p.hasSeasonData}
                 onStatsClick={handlePlayerClick}
               />
             ))}
