@@ -37,7 +37,7 @@ export default function App() {
       </main>
       <footer className="border-t border-white/10 text-white/60">
         <div className="max-w-6xl mx-auto px-4 py-6 flex items-center justify-between">
-          <span>© {new Date().getFullYear()} SekTa ry</span>
+          <span>© 2025 Aevan oy</span>
           <span className="text-sm">Teema: SekTa IG (violetti/oranssi)</span>
         </div>
       </footer>
