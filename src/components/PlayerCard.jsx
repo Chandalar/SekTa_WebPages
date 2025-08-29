@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 export default function PlayerCard({ player, index }) {
-  const { name, role, img = "/SekTa_LOGO_ilman_tausta.png", video, number } = player;
+  const { name, role, img = "/gorilla_puku.jpeg", video, number } = player;
   const videoRef = useRef(null);
   const [hovered, setHovered] = useState(false);
 
@@ -39,7 +39,7 @@ export default function PlayerCard({ player, index }) {
           src={img}
           alt={name}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-0" : "opacity-100"}`}
-          onError={(e) => { e.currentTarget.src = "/SekTa_LOGO_ilman_tausta.png"; }}
+          onError={(e) => { e.currentTarget.src = "/gorilla_puku.jpeg"; }}
         />
       </div>
 

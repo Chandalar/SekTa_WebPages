@@ -33,27 +33,26 @@ const getPlayerImage = (playerName) => {
 };
 
 const PLAYERS = [
-  { name: "Mika Aaltonen", role: "Hyökkääjä", img: "/mika.jpg", video: "/mika.mp4", number: 19 },
+  { name: "Mika Aaltonen", role: "Hyökkääjä", img: "/Mika.jpg", video: "/Mika.mp4", number: 19 },
   { name: "Petri Vikman", role: "Hyökkääjä", img: "/Petri.jpg", video: "/Petri.mp4", number: 22 },
   { name: "Miika Oja-Nisula", role: "Hyökkääjä", img: "/Miika.jpg", video: "/Miika.mp4", number: 66 },
   { name: "Akseli Nykänen", role: "Hyökkääjä", img: "/Akseli.jpg", video: "/Akseli.mp4", number: 15 },
   { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
   { name: "Vesa Halme", role: "Puolustaja", img: "/Veikka.jpg", video: "/Veikka.mp4", number: 55 },
   { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
-  { name: "Mika Ahven", role: "Maalivahti", img: "/Ahven.jpg", number: 1 },
+  { name: "Mika Ahven", role: "Maalivahti", img: "/Ahven.jpg", video: "/Ahven.mp4", number: 1 },
   { name: "Henri Kananen", role: "Hyökkääjä", img: "/Kananen.jpg", number: 27 },
   { name: "Jesse Höykinpuro", role: "Hyökkääjä", img: "/Jesse.jpg", number: 8 },
   { name: "Jimi Laaksonen", role: "Hyökkääjä", img: "/Jimi.jpg", number: 11 },
   { name: "Niko Nynäs", role: "Puolustaja", img: "/Niko.jpg", number: 33 },
   { name: "Joonas Leppänen", role: "Puolustaja", img: "/Joonas.jpg", number: 44 },
   { name: "Matias Virta", role: "Maalivahti", img: "/Masto.jpg", number: 30 },
-  { name: "Lassi Liukkonen", role: "Maalivahti", img: "/Opa.jpg", number: 35 },
 ];
 
 function PlayerCard({ p, index, stats, onStatsClick }) {
   const videoRef = useRef(null);
   const [hovered, setHovered] = useState(false);
-  const [showStats, setShowStats] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.load();
@@ -95,16 +94,16 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: index * 0.06 }}
       viewport={{ once: true }}
-      className="bg-white/10 backdrop-blur-md rounded-xl p-4 text-center border border-white/10 hover:-translate-y-1 transition cursor-pointer group"
+      className="bg-white/10 backdrop-blur-md rounded-xl p-4 pt-4 pb-3 text-center border border-white/10 hover:-translate-y-1 transition cursor-pointer group h-full flex flex-col"
       onMouseEnter={() => { setHovered(true); videoRef.current?.play(); }}
       onMouseLeave={() => {
         setHovered(false);
         if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
       }}
-      onClick={() => setShowStats(!showStats)}
+      onClick={() => setShowDetails(!showDetails)}
     >
-      {/* Kortin media-alue: ei turhaa sisädiviä */}
-      <div className="relative mx-auto mb-3 overflow-hidden rounded-lg w-[12rem] h-[24rem] md:w-[15.75rem] md:h-[30.375rem]">
+      {/* Player Photo/Video */}
+      <div className="relative mx-auto mb-2 overflow-hidden rounded-lg w-48 h-80 md:w-56 md:h-96 flex-grow flex-shrink-0">
         {p.video && (
           <video
             ref={videoRef}
@@ -119,53 +118,8 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
           src={p.img}
           alt={p.name}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-0" : "opacity-100"}`}
-          onError={(e) => { e.currentTarget.src = "/SekTa_LOGO_ilman_tausta.png"; }}
+          onError={(e) => { e.currentTarget.src = "/gorilla_puku.jpeg"; }}
         />
-        
-        {/* Stats overlay */}
-        {playerStats && (
-          <div className="absolute top-2 right-2 bg-black/70 rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="text-xs text-white space-y-1">
-              {playerStats.position === 'Maalivahti' ? (
-                // Goalie hover stats
-                <>
-                  <div className="flex items-center gap-1">
-                    <span className="text-green-400">🏆</span>
-                    <span>{playerStats.wins || 0}V</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-blue-400">🚫</span>
-                    <span>{playerStats.shutouts || 0}NP</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-yellow-400">🥅</span>
-                    <span>{playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}</span>
-                  </div>
-                </>
-              ) : (
-                // Regular player hover stats
-                <>
-                  <div className="flex items-center gap-1">
-                    <span className="text-orange-400">⚽</span>
-                    <span>{playerStats.goals || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-cyan-400">🎯</span>
-                    <span>{playerStats.assists || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-purple-400">🏆</span>
-                    <span>{playerStats.points || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-red-400">🟨</span>
-                    <span>{(playerStats.penalties || 0) * 2}min</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
         
         {/* Click indicator */}
         <div className="absolute bottom-2 right-2 bg-orange-500/80 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -190,106 +144,133 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
         )}
       </div>
 
-      <div className="flex items-baseline justify-center gap-2">
-        <strong className="text-white">{p.name}</strong>
+      {/* Name and Number */}
+      <div className="flex items-baseline justify-center gap-2 mb-1 mt-auto">
+        <strong className="text-white text-lg">{p.name}</strong>
         {p.number ? <span className="text-white/60 font-mono">#{p.number}</span> : null}
       </div>
-      <div className="text-orange-400">{p.role}</div>
       
-      {/* Performance indicators */}
+      {/* Season Stats - Inline compact format without icons */}
       {playerStats && (
-        <div className="mt-3 flex justify-center gap-2">
+        <div className="grid grid-cols-4 gap-1 mb-1 text-xs">
           {playerStats.position === 'Maalivahti' ? (
-            // Goalie stats
+            // Goalie stats in compact format
             <>
-              <div className="bg-green-500/20 px-2 py-1 rounded text-xs text-green-400">
-                {playerStats.wins || 0}V
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-green-400 font-bold">{playerStats.games || 0}</div>
+                <div className="text-white/60">O</div>
               </div>
-              <div className="bg-blue-500/20 px-2 py-1 rounded text-xs text-blue-400">
-                {playerStats.shutouts || 0}NP
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-yellow-400 font-bold">{playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}</div>
+                <div className="text-white/60">T%</div>
               </div>
-              <div className="bg-yellow-500/20 px-2 py-1 rounded text-xs text-yellow-400">
-                {playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-blue-400 font-bold">{playerStats.wins || 0}</div>
+                <div className="text-white/60">V</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-purple-400 font-bold">{playerStats.shutouts || 0}</div>
+                <div className="text-white/60">NP</div>
               </div>
             </>
           ) : (
-            // Regular player stats
+            // Regular player stats in compact format
             <>
-              <div className="bg-orange-500/20 px-2 py-1 rounded text-xs text-orange-400">
-                {playerStats.goals || 0}M
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-green-400 font-bold">{playerStats.games || 0}</div>
+                <div className="text-white/60">O</div>
               </div>
-              <div className="bg-cyan-500/20 px-2 py-1 rounded text-xs text-cyan-400">
-                {playerStats.assists || 0}S
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-orange-400 font-bold">{playerStats.goals || 0}</div>
+                <div className="text-white/60">M</div>
               </div>
-              <div className="bg-purple-500/20 px-2 py-1 rounded text-xs text-purple-400">
-                {playerStats.points || 0}P
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-cyan-400 font-bold">{playerStats.assists || 0}</div>
+                <div className="text-white/60">S</div>
               </div>
-              <div className="bg-red-500/20 px-2 py-1 rounded text-xs text-red-400">
-                {(playerStats.penalties || 0) * 2}min
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-purple-400 font-bold">{playerStats.points || 0}</div>
+                <div className="text-white/60">P</div>
               </div>
             </>
           )}
         </div>
       )}
 
-      {/* Expanded stats view */}
+      {/* Expanded details */}
       <AnimatePresence>
-        {showStats && playerStats && (
+        {showDetails && playerStats && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="mt-4 pt-4 border-t border-white/20"
+            className="mt-2 pt-2 border-t border-white/20"
           >
             <div className="space-y-2">
-              {playerStats.position === 'Maalivahti' ? (
-                // Goalie detailed stats
-                <>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">Torjuntaprosentti:</span>
-                    <span className="text-yellow-400 font-semibold">
-                      {playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">Voittoprosentti:</span>
-                    <span className="text-green-400 font-semibold">
-                      {playerStats.games > 0 ? Math.round((playerStats.wins / playerStats.games) * 100) : 0}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">PMO:</span>
-                    <span className="text-red-400 font-semibold">
-                      {playerStats.goalsAgainstAverage ? playerStats.goalsAgainstAverage.toFixed(2) : '0.00'}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                // Regular player detailed stats
-                <>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">Maalitehokkuus:</span>
-                    <span className="text-orange-400 font-semibold">
-                      {playerStats.points > 0 ? Math.round((playerStats.goals / playerStats.points) * 100) : 0}%
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-white/70">Syöttötehokkuus:</span>
-                    <span className="text-cyan-400 font-semibold">
-                      {playerStats.points > 0 ? Math.round((playerStats.assists / playerStats.points) * 100) : 0}%
-                    </span>
-                  </div>
-                </>
-              )}
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                {playerStats.position === 'Maalivahti' ? (
+                  // Goalie detailed stats in compact format
+                  <>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">PMO:</span>
+                      <span className="text-red-400 font-semibold">
+                        {playerStats.goalsAgainstAverage ? playerStats.goalsAgainstAverage.toFixed(2) : '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">Torj.:</span>
+                      <span className="text-cyan-400 font-semibold">{playerStats.saves || 0}</span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">Pääst.:</span>
+                      <span className="text-red-400 font-semibold">{playerStats.goalsAgainst || 0}</span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">Voitto%:</span>
+                      <span className="text-green-400 font-semibold">
+                        {playerStats.games > 0 ? Math.round((playerStats.wins / playerStats.games) * 100) : 0}%
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  // Regular player detailed stats in compact format
+                  <>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">P/O:</span>
+                      <span className="text-purple-400 font-semibold">
+                        {playerStats.games > 0 ? (playerStats.points / playerStats.games).toFixed(2) : '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">M%:</span>
+                      <span className="text-orange-400 font-semibold">
+                        {playerStats.points > 0 ? Math.round((playerStats.goals / playerStats.points) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">S%:</span>
+                      <span className="text-cyan-400 font-semibold">
+                        {playerStats.points > 0 ? Math.round((playerStats.assists / playerStats.points) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between bg-white/5 p-1 rounded">
+                      <span className="text-white/70">Rang.:</span>
+                      <span className="text-red-400 font-semibold">
+                        {(playerStats.penalties || 0) * 2}min
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+              
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onStatsClick(playerStats);
                 }}
-                className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2"
+                className="w-full mt-2 bg-orange-500 hover:bg-orange-600 text-white py-1 px-2 rounded text-xs font-semibold transition"
               >
-                <BarChart3 size={16} />
-                Näytä yksityiskohdat
+                Näytä kaikkien kausien tilastot
               </button>
             </div>
           </motion.div>
@@ -310,6 +291,7 @@ export default function Team() {
   const [currentSeasonIndex, setCurrentSeasonIndex] = useState(0);
   const [dynamicPlayers, setDynamicPlayers] = useState([]);
   const [allPlayersAndGoalies, setAllPlayersAndGoalies] = useState([]); // Store combined player data
+  const [showPointsChart, setShowPointsChart] = useState(false); // Added state for chart visibility
 
   useEffect(() => {
     console.log('🚀 Team page mounted, loading player stats...');
@@ -565,7 +547,19 @@ export default function Team() {
         setSelectedPlayer(playerData);
       }
     } else {
-      setSelectedPlayer(playerData);
+      // For other players, ensure we have all season data
+      const allPlayerData = allPlayersAndGoalies.find(p => 
+        p.name.toLowerCase() === playerData.name.toLowerCase()
+      );
+      
+      if (allPlayerData && allPlayerData.seasons) {
+        setSelectedPlayer({
+          ...playerData,
+          seasonHistory: allPlayerData.seasons
+        });
+      } else {
+        setSelectedPlayer(playerData);
+      }
     }
   };
 
@@ -593,6 +587,7 @@ export default function Team() {
     goals: stats.reduce((sum, p) => sum + p.goals, 0),
     assists: stats.reduce((sum, p) => sum + p.assists, 0),
     points: stats.reduce((sum, p) => sum + p.points, 0),
+    penalties: stats.reduce((sum, p) => sum + (p.penalties || 0), 0),
     players: dynamicPlayers.length, // All displayed players have season data now
     totalCards: dynamicPlayers.length // Total cards shown (all have data now)
   };
@@ -602,125 +597,37 @@ export default function Team() {
       <section className="max-w-7xl mx-auto px-4 py-12">
         {/* Header */}
         <Reveal>
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <Calendar className="text-orange-400" size={32} />
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white">
-                SekTa Joukkue
-              </h1>
-            </div>
-            
-            {/* Season Selector */}
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <Calendar className="text-white/70" size={20} />
-              <span className="text-white/70">Kausi:</span>
-              <select
-                value={selectedSeason}
-                onChange={(e) => {
-                  const newSeason = e.target.value;
-                  const seasonIndex = availableSeasons.indexOf(newSeason);
-                  handleSeasonChange(seasonIndex);
-                }}
-                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white"
-              >
-                {availableSeasons.map(season => (
-                  <option key={season} value={season} className="bg-gray-800">
-                    {season}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Reload Button */}
-            <button 
-              onClick={loadPlayerStats}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-semibold transition mb-8"
-            >
-              🔄 Päivitä tilastot
-            </button>
-            
-            <p className="text-xl text-white/70 mb-8 mt-12">
-              Tutustu pelaajiin ja heidän suorituksiinsa - {teamTotals.players} aktiivista pelaajaa
-            </p>
-            
-            {/* Link to Goalie Statistics */}
-            <div className="mb-6">
-              <Link 
-                to="/maalivahdit"
-                className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg"
-              >
-                <Shield size={20} />
-                Katso kattavat maalivahdin tilastot
-              </Link>
-            </div>
-
-
-          </div>
-        </Reveal>
-
-        {/* Team Statistics Overview */}
-        <Reveal delay={0.1}>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <StatsCard
-              title="Aktiivisia pelaajia"
-              value={teamTotals.players}
-              subtitle={`/ ${teamTotals.totalCards} yhteensä`}
-              icon="👥"
-              color="#10b981"
-            />
-            <StatsCard
-              title="Yhteensä maaleja"
-              value={teamTotals.goals}
-              icon="⚽"
-              color="#f97316"
-            />
-            <StatsCard
-              title="Yhteensä syöttöjä"
-              value={teamTotals.assists}
-              icon="🎯"
-              color="#06b6d4"
-            />
-            <StatsCard
-              title="Yhteensä pisteitä"
-              value={teamTotals.points}
-              icon="🏆"
-              color="#8b5cf6"
-            />
-          </div>
-        </Reveal>
-
-        {/* Filters and Sorting */}
-        <Reveal delay={0.2}>
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="text-white/70" size={20} />
-                <span className="text-white/70">Suodata:</span>
-                <select
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="all">Kaikki</option>
-                  <option value="hyökkääjä">Hyökkääjät</option>
-                  <option value="puolustaja">Puolustajat</option>
-                  <option value="maalivahti">Maalivahdit</option>
-                </select>
+          <div className="text-center mb-6">
+            {/* Control Bar - Season selector and Points button on same row */}
+            <div className="flex items-center justify-between gap-4 mb-8">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-white/70">Kausi:</span>
+                  <select
+                    value={selectedSeason}
+                    onChange={(e) => {
+                      const newSeason = e.target.value;
+                      const seasonIndex = availableSeasons.indexOf(newSeason);
+                      handleSeasonChange(seasonIndex);
+                    }}
+                    className="bg-card border border-white/20 rounded-lg px-4 py-2 text-white font-semibold min-w-[140px] focus:outline-none focus:ring-2 focus:ring-brand/50"
+                  >
+                    {availableSeasons.map(season => (
+                      <option key={season} value={season} className="bg-card text-white">
+                        {season}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <TrendingUp className="text-white/70" size={20} />
-                <span className="text-white/70">Järjestä:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="points">Pisteet</option>
-                  <option value="goals">Maalit</option>
-                  <option value="assists">Syötöt</option>
-                </select>
-              </div>
+              <button 
+                onClick={() => setShowPointsChart(!showPointsChart)}
+                className="flex items-center gap-2 bg-gradient-to-r from-brand to-accent hover:from-brand/90 hover:to-accent/90 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all transform hover:scale-105"
+              >
+                <BarChart3 size={16} />
+                {showPointsChart ? "Piilota pistepörssi" : "Näytä pistepörssi"}
+              </button>
             </div>
             
             <div className="text-white/60 text-sm">
@@ -731,10 +638,16 @@ export default function Team() {
           </div>
         </Reveal>
 
-        {/* Top Performers Chart */}
-        {stats.length > 0 && (
-          <Reveal delay={0.3}>
-            <div className="mb-12">
+        {/* Top Performers Chart - Now toggleable with animation */}
+        <AnimatePresence>
+          {stats.length > 0 && showPointsChart && (
+            <motion.div
+              initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+              animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+              exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+              className="mb-12"
+            >
               <AnimatedPieChart
                 data={stats
                   .sort((a, b) => b.points - a.points)
@@ -749,13 +662,49 @@ export default function Team() {
                 valueKey="pisteet"
                 height={400}
               />
-            </div>
-          </Reveal>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
+        {/* Team Statistics Overview - Made smaller and without icons */}
+        <Reveal delay={0.1}>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-8">
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/10">
+              <div className="text-center">
+                <div className="text-xl font-bold text-green-400">{teamTotals.players}</div>
+                <div className="text-white/70 text-xs">Pelaajia</div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/10">
+              <div className="text-center">
+                <div className="text-xl font-bold text-orange-400">{teamTotals.goals}</div>
+                <div className="text-white/70 text-xs">Maaleja</div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/10">
+              <div className="text-center">
+                <div className="text-xl font-bold text-blue-400">{teamTotals.assists}</div>
+                <div className="text-white/70 text-xs">Syöttöjä</div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/10">
+              <div className="text-center">
+                <div className="text-xl font-bold text-purple-400">{teamTotals.points}</div>
+                <div className="text-white/70 text-xs">Pisteitä</div>
+              </div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/10">
+              <div className="text-center">
+                <div className="text-xl font-bold text-red-400">{teamTotals.penalties * 2}min</div>
+                <div className="text-white/70 text-xs">Jäähyjä</div>
+              </div>
+            </div>
+          </div>
+        </Reveal>
+        
         {/* Players Grid */}
         <Reveal delay={0.4}>
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 h-full">
             {sortedPlayers.map((p, i) => (
               <PlayerCard 
                 key={p.name} 
@@ -782,21 +731,29 @@ export default function Team() {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-gray-900/95 rounded-xl p-6 max-w-2xl w-full border border-white/20"
+                className="bg-gray-900/95 rounded-xl p-6 max-w-4xl w-full border border-white/20 max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-2xl font-bold text-white">
                       {selectedPlayer.name}
-                      {selectedPlayer.detailedView && (
-                        <span className="ml-2 text-sm bg-red-500 px-2 py-1 rounded-full">
-                          Yksityiskohtaiset tilastot
+                      {selectedPlayer.position === 'Maalivahti' ? (
+                        <span className="ml-2 text-sm bg-orange-500 px-2 py-1 rounded-full">
+                          Maalivahti #{selectedPlayer.number}
+                        </span>
+                      ) : (
+                        <span className="ml-2 text-sm bg-orange-500 px-2 py-1 rounded-full">
+                          {selectedPlayer.position || selectedPlayer.role || 'Pelaaja'} #{selectedPlayer.number}
                         </span>
                       )}
                     </h3>
+                    <div className="text-white/70 text-sm mt-1">
+                      {selectedPlayer.seasonHistory?.length || selectedPlayer.careerStats?.seasonsPlayed || 1} kautta uralla
+                    </div>
+                    
                     {/* Season Selector */}
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-3">
                       <span className="text-white/70 text-sm">Kausi:</span>
                       <select
                         value={selectedSeason}
@@ -835,251 +792,152 @@ export default function Team() {
                   </div>
                   <button
                     onClick={() => setSelectedPlayer(null)}
-                    className="text-white/60 hover:text-white transition"
+                    className="text-white/60 hover:text-white transition text-xl"
                   >
                     ✕
                   </button>
                 </div>
                 
-                {selectedPlayer.detailedView ? (
-                  // Enhanced view for detailed stats
-                  <div className="space-y-6">
-                    {/* Current Season Stats */}
-                    <div>
-                      <h4 className="text-lg font-semibold text-white mb-4">Nykyinen kausi ({selectedSeason})</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        {selectedPlayer.position === 'Maalivahti' ? (
-                          // Goalie stats cards
-                          <>
-                            <StatsCard
-                              title="Ottelut"
-                              value={selectedPlayer.games || 0}
-                              icon="🥅"
-                              color="#10b981"
-                            />
-                            <StatsCard
-                              title="Voitot"
-                              value={selectedPlayer.wins || 0}
-                              icon="🏆"
-                              color="#f59e0b"
-                            />
-                            <StatsCard
-                              title="Torjunta%"
-                              value={selectedPlayer.savePercentage ? `${selectedPlayer.savePercentage.toFixed(1)}%` : '0%'}
-                              icon="🛡️"
-                              color="#8b5cf6"
-                            />
-                            <StatsCard
-                              title="Nollapelit"
-                              value={selectedPlayer.shutouts || 0}
-                              icon="🚫"
-                              color="#06b6d4"
-                            />
-                          </>
-                        ) : (
-                          // Regular player stats cards
-                          <>
-                            <StatsCard
-                              title="Maalit"
-                              value={selectedPlayer.goals || 0}
-                              icon="⚽"
-                              color="#f97316"
-                            />
-                            <StatsCard
-                              title="Syötöt"
-                              value={selectedPlayer.assists || 0}
-                              icon="🎯"
-                              color="#06b6d4"
-                            />
-                            <StatsCard
-                              title="Pisteet"
-                              value={selectedPlayer.points || 0}
-                              icon="🏆"
-                              color="#8b5cf6"
-                            />
-                            <StatsCard
-                              title="Rangaistukset"
-                              value={selectedPlayer.penalties || 0}
-                              icon="🟨"
-                              color="#ef4444"
-                            />
-                          </>
-                        )}
+                {/* Career Stats */}
+                {(selectedPlayer.careerStats || selectedPlayer.seasonHistory) && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-white mb-3">Uratilastot</h4>
+                    {selectedPlayer.position === 'Maalivahti' ? (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats?.totalGames || selectedPlayer.games || 0}</div>
+                          <div className="text-white/70 text-xs">Ottelut yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-blue-400">{selectedPlayer.careerStats?.totalWins || selectedPlayer.wins || 0}</div>
+                          <div className="text-white/70 text-xs">Voitot yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats?.avgSavePercentage ? `${selectedPlayer.careerStats.avgSavePercentage.toFixed(1)}%` : selectedPlayer.savePercentage ? `${selectedPlayer.savePercentage.toFixed(1)}%` : '0.0%'}</div>
+                          <div className="text-white/70 text-xs">Keskim. torjunta%</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-cyan-400">{selectedPlayer.careerStats?.totalShutouts || selectedPlayer.shutouts || 0}</div>
+                          <div className="text-white/70 text-xs">Nollapelit yhteensä</div>
+                        </div>
                       </div>
-                    </div>
-                    
-                    {/* Career Stats */}
-                    {selectedPlayer.careerStats && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-white mb-4">Uratilastot</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                          {selectedPlayer.position === 'Maalivahti' ? (
-                            // Goalie career stats
-                            <>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.totalWins || 0}</div>
-                                <div className="text-white/70 text-sm">Voitot yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-blue-400">{selectedPlayer.careerStats.totalShutouts || 0}</div>
-                                <div className="text-white/70 text-sm">Nollapelit yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats.totalSaves || 0}</div>
-                                <div className="text-white/70 text-sm">Torjunnat yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats.totalGoalsAgainst || 0}</div>
-                                <div className="text-white/70 text-sm">Päästetyt yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.seasonsPlayed}</div>
-                                <div className="text-white/70 text-sm">Kaudet</div>
-                              </div>
-                            </>
-                          ) : (
-                            // Regular player career stats
-                            <>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-orange-400">{selectedPlayer.careerStats.totalGoals}</div>
-                                <div className="text-white/70 text-sm">Maalit yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-cyan-400">{selectedPlayer.careerStats.totalAssists}</div>
-                                <div className="text-white/70 text-sm">Syötöt yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats.totalPoints}</div>
-                                <div className="text-white/70 text-sm">Pisteet yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats.totalPenalties || 0}</div>
-                                <div className="text-white/70 text-sm">Rangaistukset yhteensä</div>
-                              </div>
-                              <div className="bg-white/10 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats.seasonsPlayed}</div>
-                                <div className="text-white/70 text-sm">Kaudet</div>
-                              </div>
-                            </>
-                          )}
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-green-400">{selectedPlayer.careerStats?.totalGames || selectedPlayer.games || 0}</div>
+                          <div className="text-white/70 text-xs">Ottelut yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-orange-400">{selectedPlayer.careerStats?.totalGoals || selectedPlayer.goals || 0}</div>
+                          <div className="text-white/70 text-xs">Maalit yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-cyan-400">{selectedPlayer.careerStats?.totalAssists || selectedPlayer.assists || 0}</div>
+                          <div className="text-white/70 text-xs">Syötöt yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-purple-400">{selectedPlayer.careerStats?.totalPoints || selectedPlayer.points || 0}</div>
+                          <div className="text-white/70 text-xs">Pisteet yhteensä</div>
+                        </div>
+                        <div className="bg-white/10 rounded p-2 text-center">
+                          <div className="text-2xl font-bold text-red-400">{selectedPlayer.careerStats?.totalPenalties || 0}</div>
+                          <div className="text-white/70 text-xs">Rangaistukset yhteensä</div>
                         </div>
                       </div>
                     )}
-                    
-                    {/* Season History */}
-                    {selectedPlayer.seasonHistory && selectedPlayer.seasonHistory.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-white mb-4">Kausihistoria</h4>
-                        <div className="space-y-2">
-                          {selectedPlayer.seasonHistory.map((season, index) => (
-                            <div key={index} className="bg-white/5 rounded-lg p-3 flex justify-between items-center">
-                              <span className="text-white font-semibold">{season.season}</span>
-                              <div className="flex gap-4 text-sm">
-                                <span className="text-orange-400">{season.goals}M</span>
-                                <span className="text-cyan-400">{season.assists}S</span>
-                                <span className="text-purple-400">{season.points}P</span>
-                                <span className="text-red-400">{season.penalties || 0}J</span>
-                                <span className="text-white/60">{season.games}GP</span>
+                  </div>
+                )}
+
+                {/* Season History - Show all seasons directly */}
+                {selectedPlayer.seasonHistory && selectedPlayer.seasonHistory.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-white mb-3">Kausihistoria</h4>
+                    <div className="space-y-2">
+                      {selectedPlayer.seasonHistory.map((season, index) => (
+                        <div key={index} className="bg-white/5 rounded p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-white font-semibold">{season.season}</span>
+                            {selectedPlayer.position === 'Maalivahti' ? (
+                              <span className="text-yellow-400 font-bold">{season.savePercentage?.toFixed(1) || '0.0'}%</span>
+                            ) : (
+                              <span className="text-purple-400 font-bold">{season.points || 0} pts</span>
+                            )}
+                          </div>
+                          {selectedPlayer.position === 'Maalivahti' ? (
+                            <div className="grid grid-cols-5 gap-2 text-xs">
+                              <div className="text-center">
+                                <div className="text-green-400 font-bold">{season.games || 0}</div>
+                                <div className="text-white/60">O</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-blue-400 font-bold">{season.wins || 0}</div>
+                                <div className="text-white/60">V</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-purple-400 font-bold">{season.shutouts || 0}</div>
+                                <div className="text-white/60">NP</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-cyan-400 font-bold">{season.saves || 0}</div>
+                                <div className="text-white/60">Torj.</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-red-400 font-bold">{(season.penalties || 0) * 2}min</div>
+                                <div className="text-white/60">J</div>
                               </div>
                             </div>
-                          ))}
+                          ) : (
+                            <div className="grid grid-cols-5 gap-2 text-xs">
+                              <div className="text-center">
+                                <div className="text-green-400 font-bold">{season.games || 0}</div>
+                                <div className="text-white/60">O</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-orange-400 font-bold">{season.goals || 0}</div>
+                                <div className="text-white/60">M</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-cyan-400 font-bold">{season.assists || 0}</div>
+                                <div className="text-white/60">S</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-purple-400 font-bold">{season.points || 0}</div>
+                                <div className="text-white/60">P</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-red-400 font-bold">{(season.penalties || 0) * 2}min</div>
+                                <div className="text-white/60">J</div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
-                    
-                    {/* Performance Chart */}
-                    <div>
-                      <PlayerRadarChart
-                        data={selectedPlayer.position === 'Maalivahti' ? [
-                          { subject: 'Ottelut', A: selectedPlayer.games || 0 },
-                          { subject: 'Voitot', A: selectedPlayer.wins || 0 },
-                          { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
-                          { subject: 'Torjunnat', A: Math.min((selectedPlayer.saves || 0) / 10, 100) }, // Scale down saves
-                          { subject: 'Nollapelit', A: (selectedPlayer.shutouts || 0) * 10 }, // Scale up shutouts
-                          { subject: 'Voitto%', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 }
-                        ] : [
-                          { subject: 'Maalit', A: selectedPlayer.goals || 0 },
-                          { subject: 'Syötöt', A: selectedPlayer.assists || 0 },
-                          { subject: 'Pisteet', A: selectedPlayer.points || 0 },
-                          { subject: 'Pelit', A: selectedPlayer.games || 0 },
-                          { subject: 'Rangaistukset', A: selectedPlayer.penalties || 0 },
-                          { subject: 'Pistetehok.', A: selectedPlayer.games > 0 ? (selectedPlayer.points / selectedPlayer.games) * 10 : 0 }
-                        ]}
-                        title={`${selectedPlayer.name} - Suoritusprofiili`}
-                        height={350}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  // Standard view
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="space-y-3">
-                      {selectedPlayer.position === 'Maalivahti' ? (
-                        // Goalie standard stats
-                        <>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-green-400">{selectedPlayer.games || 0}</div>
-                            <div className="text-white/70 text-xs">Ottelut</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-orange-400">{selectedPlayer.wins || 0}</div>
-                            <div className="text-white/70 text-xs">Voitot</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-purple-400">{selectedPlayer.savePercentage ? `${selectedPlayer.savePercentage.toFixed(1)}%` : '0%'}</div>
-                            <div className="text-white/70 text-xs">Torjunta%</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-blue-400">{selectedPlayer.shutouts || 0}</div>
-                            <div className="text-white/70 text-xs">Nollapelit</div>
-                          </div>
-                        </>
-                      ) : (
-                        // Regular player standard stats
-                        <>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-orange-400">{selectedPlayer.goals}</div>
-                            <div className="text-white/70 text-xs">Maalit</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-cyan-400">{selectedPlayer.assists}</div>
-                            <div className="text-white/70 text-xs">Syötöt</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-purple-400">{selectedPlayer.points}</div>
-                            <div className="text-white/70 text-xs">Pisteet</div>
-                          </div>
-                          <div className="bg-white/10 rounded-lg p-3 text-center">
-                            <div className="text-lg font-bold text-red-400">{selectedPlayer.penalties || 0}</div>
-                            <div className="text-white/70 text-xs">Rangaistukset</div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    
-                    <div className="col-span-2">
-                      <PlayerRadarChart
-                        data={selectedPlayer.position === 'Maalivahti' ? [
-                          { subject: 'Ottelut', A: stats.length > 0 ? ((selectedPlayer.games || 0) / Math.max(...stats.map(s => s.games || 1))) * 100 : 0 },
-                          { subject: 'Voitot', A: stats.length > 0 ? ((selectedPlayer.wins || 0) / Math.max(...stats.map(s => s.wins || 1))) * 100 : 0 },
-                          { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
-                          { subject: 'Nollapelit', A: stats.length > 0 ? ((selectedPlayer.shutouts || 0) / Math.max(...stats.map(s => s.shutouts || 1))) * 100 : 0 },
-                          { subject: 'Voittosuhde', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 },
-                          { subject: 'Torjunnat', A: stats.length > 0 ? ((selectedPlayer.saves || 0) / Math.max(...stats.map(s => s.saves || 1))) * 100 : 0 }
-                        ] : [
-                          { subject: 'Maalit', A: stats.length > 0 ? (selectedPlayer.goals / Math.max(...stats.map(s => s.goals))) * 100 : 0 },
-                          { subject: 'Syötöt', A: stats.length > 0 ? (selectedPlayer.assists / Math.max(...stats.map(s => s.assists))) * 100 : 0 },
-                          { subject: 'Pisteet', A: stats.length > 0 ? (selectedPlayer.points / Math.max(...stats.map(s => s.points))) * 100 : 0 },
-                          { subject: 'Rangaistukset', A: stats.length > 0 ? (selectedPlayer.penalties / Math.max(...stats.map(s => s.penalties || 1))) * 100 : 0 },
-                          { subject: 'Maalitehokkuus', A: selectedPlayer.points > 0 ? ((selectedPlayer.goals / selectedPlayer.points) * 100) : 0 },
-                          { subject: 'Syöttötehokkuus', A: selectedPlayer.points > 0 ? ((selectedPlayer.assists / selectedPlayer.points) * 100) : 0 }
-                        ]}
-                        title={`${selectedPlayer.name} - Suoritusprofiili`}
-                        height={300}
-                      />
+                      ))}
                     </div>
                   </div>
                 )}
+
+                {/* Performance Chart - Remove the current season stats section */}
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">{selectedPlayer.name} - Suoritusprofiili</h4>
+                  <PlayerRadarChart
+                    data={selectedPlayer.position === 'Maalivahti' ? [
+                      { subject: 'Ottelut', A: selectedPlayer.games || 0 },
+                      { subject: 'Voitot', A: selectedPlayer.wins || 0 },
+                      { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
+                      { subject: 'Torjunnat', A: Math.min((selectedPlayer.saves || 0) / 10, 100) }, // Scale down saves
+                      { subject: 'Nollapelit', A: (selectedPlayer.shutouts || 0) * 10 }, // Scale up shutouts
+                      { subject: 'Voitto%', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 }
+                    ] : [
+                      { subject: 'Maalit', A: selectedPlayer.goals || 0 },
+                      { subject: 'Syötöt', A: selectedPlayer.assists || 0 },
+                      { subject: 'Pisteet', A: selectedPlayer.points || 0 },
+                      { subject: 'Pelit', A: selectedPlayer.games || 0 },
+                      { subject: 'Rangaistukset', A: selectedPlayer.penalties || 0 },
+                      { subject: 'Pistetehok.', A: selectedPlayer.games > 0 ? (selectedPlayer.points / selectedPlayer.games) * 10 : 0 }
+                    ]}
+                    height={300}
+                  />
+                </div>
               </motion.div>
             </motion.div>
           )}

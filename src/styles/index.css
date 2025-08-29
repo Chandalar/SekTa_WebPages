@@ -15,6 +15,23 @@
 html, body, #root { height: 100%; }
 body { background: var(--color-bg); color: var(--color-text); }
 
+/* Fix for dropdown/select elements to ensure options are visible */
+select {
+  background-color: #141129 !important; /* Use card background color */
+  color: #ecebff !important; /* Use text color */
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+select option {
+  background-color: #141129 !important; /* Use card background color */
+  color: #ecebff !important; /* Use text color */
+}
+
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(107, 91, 215, 0.5); /* Brand color focus ring */
+}
+
 /* V4:ssa ei tarvita @tailwind base/components/utilities -direktiivejä */
     /* Match day theme tweak: hotter palette */
 body.match-day {

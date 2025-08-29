@@ -11,7 +11,7 @@ export default function VideoCard({ title, src, poster = "/SekTa_LOGO_ilman_taus
           <strong className="text-lg">{title}</strong>
           <div className="text-muted text-sm">Viikon pelaaja</div>
         </div>
-        <img src="/SekTa_LOGO_ilman_tausta.png" alt="SekTa" className="h-10 drop-shadow" />
+        <img src="/gorilla_puku.jpeg" alt="SekTa" className="h-10 drop-shadow" />
       </div>
     </article>
   );

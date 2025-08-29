@@ -102,6 +102,46 @@ export function AnimatedBarChart({ data, title, xKey, yKey, color = COLORS.prima
   );
 }
 
+// Animated Stacked Bar Chart Component
+export function AnimatedStackedBarChart({ data, title, xKey, barKeys, colors, height = 300 }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      viewport={{ once: true }}
+      className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10"
+    >
+      <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
+      <ResponsiveContainer width="100%" height={height}>
+        <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#ffffff20" />
+          <XAxis 
+            dataKey={xKey} 
+            stroke="#ffffff80" 
+            fontSize={12}
+            angle={-45}
+            textAnchor="end"
+            height={80}
+          />
+          <YAxis stroke="#ffffff80" fontSize={12} />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend />
+          {barKeys.map((key, index) => (
+            <Bar 
+              key={key}
+              dataKey={key} 
+              stackId="a"
+              fill={colors[index % colors.length] || COLORS.primary}
+              radius={index === barKeys.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+            />
+          ))}
+        </BarChart>
+      </ResponsiveContainer>
+    </motion.div>
+  );
+}
+
 // Animated Pie Chart Component
 export function AnimatedPieChart({ data, title, nameKey, valueKey, height = 300 }) {
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -210,6 +250,32 @@ export function AnimatedAreaChart({ data, title, xKey, yKey, color = COLORS.acce
 
 // Radar Chart Component for Player Stats
 export function PlayerRadarChart({ data, title, height = 300 }) {
+  // Group data by player name if multiple players data is provided
+  const multiplePlayers = data.some(item => item.name);
+  
+  let chartData = data;
+  let playerNames = [];
+  
+  if (multiplePlayers) {
+    // Extract unique player names
+    playerNames = [...new Set(data.map(item => item.name))].filter(Boolean);
+    
+    // Get unique subjects (attributes)
+    const subjects = [...new Set(data.map(item => item.subject))];
+    
+    // Reorganize data for multi-player radar chart
+    chartData = subjects.map(subject => {
+      const dataPoint = { subject };
+      
+      playerNames.forEach(name => {
+        const playerData = data.find(item => item.name === name && item.subject === subject);
+        dataPoint[name] = playerData ? playerData.A : 0;
+      });
+      
+      return dataPoint;
+    });
+  }
+  
   return (
     <motion.div
       initial={{ opacity: 0, rotate: -5 }}
@@ -220,23 +286,42 @@ export function PlayerRadarChart({ data, title, height = 300 }) {
     >
       <h3 className="text-xl font-bold text-white mb-4 text-center">{title}</h3>
       <ResponsiveContainer width="100%" height={height}>
-        <RadarChart data={data}>
+        <RadarChart data={chartData}>
           <PolarGrid stroke="#ffffff30" />
           <PolarAngleAxis dataKey="subject" tick={{ fill: '#ffffff80', fontSize: 12 }} />
           <PolarRadiusAxis 
             angle={90} 
-            domain={[0, 100]} 
+            domain={[0, 'auto']} 
             tick={{ fill: '#ffffff60', fontSize: 10 }}
           />
-          <Radar
-            name="Stats"
-            dataKey="A"
-            stroke={COLORS.primary}
-            fill={COLORS.primary}
-            fillOpacity={0.3}
-            strokeWidth={2}
-          />
+          
+          {multiplePlayers ? (
+            // Multiple players
+            playerNames.map((name, index) => (
+              <Radar
+                key={name}
+                name={name}
+                dataKey={name}
+                stroke={PIE_COLORS[index % PIE_COLORS.length]}
+                fill={PIE_COLORS[index % PIE_COLORS.length]}
+                fillOpacity={0.3}
+                strokeWidth={2}
+              />
+            ))
+          ) : (
+            // Single player
+            <Radar
+              name="Stats"
+              dataKey="A"
+              stroke={COLORS.primary}
+              fill={COLORS.primary}
+              fillOpacity={0.3}
+              strokeWidth={2}
+            />
+          )}
+          
           <Tooltip content={<CustomTooltip />} />
+          {multiplePlayers && <Legend />}
         </RadarChart>
       </ResponsiveContainer>
     </motion.div>

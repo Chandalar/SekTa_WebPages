@@ -1,0 +1,2648 @@
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  RotateCcw, 
+  Save, 
+  Download, 
+  Upload, 
+  Users, 
+  Target,
+  Settings,
+  Trash2,
+  Edit,
+  Share2,
+  PenTool,
+  Type
+} from 'lucide-react';
+import Reveal from '../components/Reveal';
+import { getPlayerStatsFromCSV, getComprehensivePlayerAndGoalieLists } from '../utils/csvDataLoader';
+
+export default function Formation() {
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [availableSeasons, setAvailableSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState('2023-2024'); // Use last year by default
+  const [formations, setFormations] = useState([]);
+  const [draggedPlayer, setDraggedPlayer] = useState(null);
+  const [fieldPlayers, setFieldPlayers] = useState({
+    players1: [],
+    tactics1: []
+  });
+  const fieldRefs = useRef({
+    field1: null,
+    field2: null,
+    field3: null
+  });
+  const [activeField, setActiveField] = useState('field1');
+  const [loading, setLoading] = useState(true);
+  const [fields, setFields] = useState([
+    { id: 'players1', type: 'players', name: 'Kentälliset 1' },
+    { id: 'tactics1', type: 'tactics', name: 'Taktiikka 1' }
+  ]);
+  const [editingFieldId, setEditingFieldId] = useState(null);
+  const [editingFieldName, setEditingFieldName] = useState('');
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [manualTouchMode, setManualTouchMode] = useState(false); // New state for manual touch mode toggle
+  const [touchedPlayer, setTouchedPlayer] = useState(null);
+  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState(null);
+  const [selectedPlayerStats, setSelectedPlayerStats] = useState(null);
+  const [availablePlayers, setAvailablePlayers] = useState([]);
+  const [drawMode, setDrawMode] = useState(null); // 'pen', 'text', or null
+  const [drawing, setDrawing] = useState(false);
+  const [currentPath, setCurrentPath] = useState([]);
+  const [paths, setPaths] = useState([]); // [{id, points: [{x, y}, ...], color, width, fieldId}]
+  const [texts, setTexts] = useState([]); // [{id, x, y, text, size, fieldId}]
+  const [currentText, setCurrentText] = useState('');
+  const [textInputPosition, setTextInputPosition] = useState({ x: 0, y: 0 });
+  const [activeFieldForDrawing, setActiveFieldForDrawing] = useState(null);
+  const [drawingColor, setDrawingColor] = useState('#ff6600'); // Default orange color
+  const [drawingWidth, setDrawingWidth] = useState(2); // Default width
+  const [textSize, setTextSize] = useState('medium'); // small, medium, large
+
+  // Player image mapping - maps player names to their actual image filenames
+  const playerImageMap = {
+    'Mika Aaltonen': 'Mika.jpg',
+    'Mika Ahven': 'Ahven.jpg', 
+    'Jesse Höykinpuro': 'Jesse.jpg',
+    'Henri Kananen': 'Kananen.jpg',
+    'Juha Kiilunen': 'Jimi.jpg',
+    'Jimi Laaksonen': 'Jimi.jpg',
+    'Akseli Nykänen': 'Akseli.jpg',
+    'Niko Nynäs': 'Niko.jpg',
+    'Miika Oja-Nisula': 'Miika.jpg',
+    'Joonas Leppänen': 'Joonas.jpg',
+    'Joni Vainio': 'Joni.jpg', 
+    'Petri Vikman': 'Petri.jpg',
+    'Ville Mäenranta': 'Ville.jpg',
+    'Vesa Halme': 'Veikka.jpg',
+    'Matias Virta': 'Masto.jpg',
+    'Lassi Liukkonen': 'Opa.jpg'
+  };
+
+  // Complete player media information with images and videos
+  const PLAYER_MEDIA = [
+    { name: "Mika Aaltonen", img: "/Mika.jpg", video: "/Mika.mp4" },
+    { name: "Petri Vikman", img: "/Petri.jpg", video: "/Petri.mp4" },
+    { name: "Miika Oja-Nisula", img: "/Miika.jpg", video: "/Miika.mp4" },
+    { name: "Akseli Nykänen", img: "/Akseli.jpg", video: "/Akseli.mp4" },
+    { name: "Joni Vainio", img: "/Joni.jpg", video: "/Joni.mp4" },
+    { name: "Vesa Halme", img: "/Veikka.jpg", video: "/Veikka.mp4" },
+    { name: "Ville Mäenranta", img: "/Ville.jpg", video: "/Ville.mp4" },
+    { name: "Mika Ahven", img: "/Ahven.jpg", video: "/Ahven.mp4" },
+    { name: "Henri Kananen", img: "/Kananen.jpg", video: null },
+    { name: "Jesse Höykinpuro", img: "/Jesse.jpg", video: null },
+    { name: "Jimi Laaksonen", img: "/Jimi.jpg", video: null },
+    { name: "Niko Nynäs", img: "/Niko.jpg", video: null },
+    { name: "Joonas Leppänen", img: "/Joonas.jpg", video: null },
+    { name: "Matias Virta", img: "/Masto.jpg", video: null },
+    { name: "Lassi Liukkonen", img: "/Opa.jpg", video: null },
+  ];
+
+  // Function to get player image
+  const getPlayerImage = (playerName) => {
+    // First check the PLAYER_MEDIA list for the most accurate information
+    const playerMedia = PLAYER_MEDIA.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+    if (playerMedia && playerMedia.img) {
+      return playerMedia.img.startsWith('/') ? playerMedia.img.substring(1) : playerMedia.img;
+    }
+    
+    // Fall back to playerImageMap
+    if (playerImageMap[playerName]) {
+      return playerImageMap[playerName];
+    }
+    
+    // Use default image if no specific image found
+    return 'gorilla_puku.jpeg';
+  };
+
+  // Function to get player video
+  const getPlayerVideo = (playerName) => {
+    // First check the PLAYER_MEDIA list for the most accurate information
+    const playerMedia = PLAYER_MEDIA.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+    if (playerMedia?.video) {
+      return playerMedia.video;
+    }
+    
+    // For players not in PLAYER_MEDIA, check if they have a video in playerImageMap
+    // This is for backward compatibility
+    const playerInMap = Object.keys(playerImageMap).find(name => name.toLowerCase() === playerName.toLowerCase());
+    if (playerInMap && playerImageMap[playerInMap]) {
+      // Generate video name based on the actual player name in the map
+      const videoName = playerInMap.replace(/\s+/g, '_') + '.mp4';
+      return `/${videoName}`;
+    }
+    
+    // Generate video filename based on player name
+    // Replace spaces with underscores and add .mp4 extension
+    const videoName = playerName.replace(/\s+/g, '_') + '.mp4';
+    return `/${videoName}`;
+  };
+
+  // Detect touch device
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+    // Set manual touch mode to true by default on touch devices
+    setManualTouchMode(isTouch);
+  }, []);
+
+  // Use manual touch mode setting
+  const effectiveTouchMode = manualTouchMode;
+
+  // Load real player data
+  useEffect(() => {
+    loadPlayerData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedSeason) {
+      loadFormations();
+      initializeFields();
+    }
+  }, [selectedSeason]);
+
+  const loadPlayerData = async () => {
+    try {
+      console.log(' Hockey Loading real player data for floorball formation...');
+      setLoading(true);
+      
+      // Use the comprehensive data loader to get all players including those from pelaajat.csv
+      const data = await getComprehensivePlayerAndGoalieLists();
+      
+      if (data && (data.players.length > 0 || data.goalies.length > 0)) {
+        // We only want field players, not goalies
+        setAllPlayers(data.players);
+        setAvailableSeasons(data.seasons || ['2024-2025', '2023-2024']);
+        
+        // Set to last year (second season in list or 2023-2024)
+        const lastYear = data.seasons?.[1] || '2023-2024';
+        setSelectedSeason(lastYear);
+        
+        console.log(`✅ Loaded ${data.players.length} players from seasons:`, data.seasons);
+        console.log('👥 Using season for formation:', lastYear);
+      } else {
+        // Fallback to original method if comprehensive data fails
+        const fallbackData = await getPlayerStatsFromCSV();
+        
+        if (fallbackData && fallbackData.players) {
+          setAllPlayers(fallbackData.players);
+          setAvailableSeasons(fallbackData.seasons || ['2024-2025', '2023-2024']);
+          
+          // Set to last year (second season in list or 2023-2024)
+          const lastYear = fallbackData.seasons?.[1] || '2023-2024';
+          setSelectedSeason(lastYear);
+          
+          console.log(`✅ Loaded ${fallbackData.players.length} players from seasons:`, fallbackData.seasons);
+          console.log('👥 Using season for formation:', lastYear);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading player data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get field players (not goalies) for selected season
+  const getFieldPlayersForSeason = () => {
+    return allPlayers.map(player => {
+      const seasonData = player.seasons?.find(s => s.season === selectedSeason);
+      if (seasonData && seasonData.position !== 'Maalivahti') {
+        return {
+          id: player.name,
+          name: player.name,
+          number: seasonData.number || 'N/A',
+          position: seasonData.position,
+          goals: seasonData.goals || 0,
+          assists: seasonData.assists || 0,
+          points: seasonData.points || 0,
+          games: seasonData.games || 0
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
+  useEffect(() => {
+    setAvailablePlayers(getFieldPlayersForSeason());
+  }, [allPlayers, selectedSeason]);
+
+  const loadFormations = () => {
+    const saved = localStorage.getItem(`sekta_formations_${selectedSeason}`);
+    if (saved) {
+      setFormations(JSON.parse(saved));
+    }
+  };
+
+  const saveFormations = (newFormations) => {
+    localStorage.setItem(`sekta_formations_${selectedSeason}`, JSON.stringify(newFormations));
+    setFormations(newFormations);
+  };
+
+  // Initialize empty fields for both player lineup and tactics
+  const initializeFields = () => {
+    const initialFields = {};
+    fields.forEach(field => {
+      if (field.type === 'tactics') {
+        // Tactics fields start with default positions
+        const emptyField = [
+          // Defenders (2) - positioned at back
+          { id: 'def1', x: 25, y: 85, role: 'Puolustaja', player: null },
+          { id: 'def2', x: 75, y: 85, role: 'Puolustaja', player: null },
+          // Forwards (3) - positioned at front
+          { id: 'fwd1', x: 20, y: 25, role: 'Hyökkääjä', player: null },
+          { id: 'fwd2', x: 50, y: 15, role: 'Hyökkääjä', player: null },
+          { id: 'fwd3', x: 80, y: 25, role: 'Hyökkääjä', player: null },
+        ];
+        initialFields[field.id] = emptyField.map(p => ({ ...p, id: `${field.id}_${p.id}` }));
+      } else {
+        // Player lineup fields start empty
+        initialFields[field.id] = [];
+      }
+    });
+    
+    setFieldPlayers(initialFields);
+  };
+
+  const handleDragStart = (player) => {
+    setDraggedPlayer(player);
+  };
+
+  const handlePlayerDragStart = (e, playerId, fieldName) => {
+    // Store the player being dragged from the field
+    const player = fieldPlayers[fieldName]?.find(p => p.id === playerId)?.player;
+    if (player) {
+      setDraggedPlayer({ ...player, fromField: fieldName, fromPositionId: playerId });
+    }
+  };
+
+  const addField = (type) => {
+    const newId = `${type}${Date.now()}`;
+    const newField = {
+      id: newId,
+      type,
+      name: type === 'players' ? `Kentälliset ${fields.filter(f => f.type === 'players').length + 1}` : `Taktiikka ${fields.filter(f => f.type === 'tactics').length + 1}`
+    };
+    
+    setFields(prev => [...prev, newField]);
+    
+    // Initialize the new field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [newId]: type === 'tactics' ? [
+        // Default positions for tactics fields
+        { id: `${newId}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+        { id: `${newId}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+        { id: `${newId}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+        { id: `${newId}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+        { id: `${newId}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+      ] : []
+    }));
+  };
+
+  const removeField = (fieldId) => {
+    setFields(prev => prev.filter(f => f.id !== fieldId));
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      delete updated[fieldId];
+      return updated;
+    });
+  };
+
+  const startEditingField = (fieldId, currentName) => {
+    setEditingFieldId(fieldId);
+    setEditingFieldName(currentName);
+  };
+
+  const saveFieldName = () => {
+    if (editingFieldName.trim()) {
+      setFields(prev => prev.map(f => 
+        f.id === editingFieldId ? { ...f, name: editingFieldName.trim() } : f
+      ));
+    }
+    setEditingFieldId(null);
+    setEditingFieldName('');
+  };
+
+  const cancelEditingField = () => {
+    setEditingFieldId(null);
+    setEditingFieldName('');
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, positionId, fieldName) => {
+    e.preventDefault();
+    if (!draggedPlayer) return;
+
+    // Update the specific field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].map(pos => {
+        if (pos.id === positionId) {
+          return { ...pos, player: draggedPlayer };
+        }
+        // Remove player from other positions in this field
+        if (pos.player && pos.player.id === draggedPlayer.id) {
+          return { ...pos, player: null };
+        }
+        return pos;
+      })
+    }));
+
+    // Also remove from other fields
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].map(pos => 
+            pos.player && pos.player.id === draggedPlayer.id 
+              ? { ...pos, player: null } 
+              : pos
+          );
+        }
+      });
+      return updated;
+    });
+
+    setDraggedPlayer(null);
+  };
+
+  const handleFieldDrop = (e, fieldName) => {
+    e.preventDefault();
+    if (!draggedPlayer || !fieldRefs.current[fieldName]) return;
+
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (draggedPlayer.fromField && draggedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [draggedPlayer.fromField]: prev[draggedPlayer.fromField].filter(p => p.id !== draggedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: draggedPlayer.position || 'Custom',
+      player: {
+        id: draggedPlayer.id,
+        name: draggedPlayer.name,
+        number: draggedPlayer.number,
+        position: draggedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== draggedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== draggedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setDraggedPlayer(null);
+  };
+
+  const removePlayerFromField = (positionId, fieldName) => {
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName]?.filter(pos => pos.id !== positionId) || []
+    }));
+  };
+
+  const clearField = (fieldName) => {
+    const field = fields.find(f => f.id === fieldName);
+    if (field?.type === 'tactics') {
+      // Reset tactics field to default positions
+      const emptyField = [
+        { id: `${fieldName}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+        { id: `${fieldName}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+        { id: `${fieldName}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+        { id: `${fieldName}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+        { id: `${fieldName}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+      ];
+      setFieldPlayers(prev => ({ ...prev, [fieldName]: emptyField }));
+    } else {
+      // Clear players field completely
+      setFieldPlayers(prev => ({ ...prev, [fieldName]: [] }));
+    }
+  };
+
+  const clearAllFields = () => {
+    const cleared = {};
+    fields.forEach(field => {
+      if (field.type === 'tactics') {
+        cleared[field.id] = [
+          { id: `${field.id}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+          { id: `${field.id}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+          { id: `${field.id}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+          { id: `${field.id}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+          { id: `${field.id}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+        ];
+      } else {
+        cleared[field.id] = [];
+      }
+    });
+    setFieldPlayers(cleared);
+  };
+
+  // Share formation function
+  const shareFormation = () => {
+    const data = {
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths,
+      texts: texts,
+      exported: new Date().toISOString(),
+      totalPlayers: Object.values(fieldPlayers).flat().filter(p => p.player).length
+    };
+    
+    // Create a shareable link
+    const dataStr = JSON.stringify(data);
+    const encodedData = btoa(encodeURIComponent(dataStr));
+    const shareLink = `${window.location.origin}${window.location.pathname}#formation=${encodedData}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareLink).then(() => {
+      alert('Linkki kopioitu leikepöydälle! Voit nyt jakaa sen toiselle valmentajalle.');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      // Fallback: show the link in a prompt
+      prompt('Kopioi tämä linkki jakaaksesi kokoonpanon:', shareLink);
+    });
+  };
+
+  // Handle share link on page load
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#formation=')) {
+      try {
+        const encodedData = hash.substring(11); // Remove '#formation='
+        const dataStr = decodeURIComponent(atob(encodedData));
+        const data = JSON.parse(dataStr);
+        
+        // Load the shared formation
+        setSelectedSeason(data.season);
+        setFieldPlayers(data.fields || {});
+        setPaths(data.paths || []);
+        setTexts(data.texts || []);
+        
+        alert('Kokoonpano ladattu jaettavasta linkistä!');
+        
+        // Remove the hash from URL
+        window.history.replaceState(null, null, ' ');
+      } catch (error) {
+        console.error('Error loading shared formation:', error);
+        alert('Virhe ladattaessa jaettua kokoonpanoa.');
+      }
+    }
+  }, []);
+
+  // Drawing functions
+  const startDrawing = (mode, fieldId) => {
+    setDrawMode(mode);
+    setActiveFieldForDrawing(fieldId);
+    if (mode === 'pen') {
+      setCurrentPath([]);
+    }
+  };
+
+  const addTextToField = () => {
+    if (currentText.trim() && activeFieldForDrawing) {
+      const newText = {
+        id: Date.now(),
+        x: textInputPosition.x,
+        y: textInputPosition.y,
+        text: currentText.trim(),
+        size: textSize,
+        fieldId: activeFieldForDrawing
+      };
+      
+      setTexts(prev => [...prev, newText]);
+      setCurrentText('');
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  const handleFieldMouseDown = (e, fieldId) => {
+    if (!drawMode) return;
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (drawMode === 'pen') {
+      setDrawing(true);
+      setCurrentPath([{ x, y }]);
+    } else if (drawMode === 'text') {
+      setTextInputPosition({ x, y });
+      setCurrentText('');
+      // We'll show the text input modal in the render section
+    }
+  };
+
+  const handleFieldMouseMove = (e, fieldId) => {
+    if (!drawing || drawMode !== 'pen') return;
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    // Add point to the current path
+    setCurrentPath(prev => [...prev, { x, y }]);
+  };
+
+  const handleFieldMouseUp = (e, fieldId) => {
+    if (!drawMode) return;
+    
+    if (drawMode === 'pen' && drawing && currentPath.length > 1) {
+      // Add the path
+      const newPath = {
+        id: Date.now(),
+        points: currentPath,
+        color: drawingColor,
+        width: drawingWidth,
+        fieldId: fieldId
+      };
+      
+      setPaths(prev => [...prev, newPath]);
+      setCurrentPath([]);
+      setDrawing(false);
+    }
+    
+    if (drawMode !== 'text') {
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  // Touch-based drawing
+  const handleFieldTouchStart = (e, fieldId) => {
+    if (!drawMode) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    
+    if (drawMode === 'pen') {
+      setDrawing(true);
+      setCurrentPath([{ x, y }]);
+    } else if (drawMode === 'text') {
+      setTextInputPosition({ x, y });
+      setCurrentText('');
+      // We'll show the text input modal in the render section
+    }
+  };
+
+  const handleFieldTouchMove = (e, fieldId) => {
+    if (!drawing || drawMode !== 'pen') return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    
+    // Add point to the current path
+    setCurrentPath(prev => [...prev, { x, y }]);
+  };
+
+  const handleFieldTouchEnd = (e, fieldId) => {
+    // First check if this is a player placement touch event
+    if (touchedPlayer && fieldRefs.current[fieldId]) {
+      handlePlayerFieldTouchEnd(e, fieldId);
+      return;
+    }
+    
+    // Then handle drawing touch events
+    if (!drawMode) return;
+    
+    if (drawMode === 'pen' && drawing && currentPath.length > 1) {
+      // Add the path
+      const newPath = {
+        id: Date.now(),
+        points: currentPath,
+        color: drawingColor,
+        width: drawingWidth,
+        fieldId: fieldId
+      };
+      
+      setPaths(prev => [...prev, newPath]);
+      setCurrentPath([]);
+      setDrawing(false);
+    }
+    
+    if (drawMode !== 'text') {
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  const handlePlayerFieldTouchEnd = (e, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer || !fieldRefs.current[fieldName]) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (touchedPlayer.fromField && touchedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [touchedPlayer.fromField]: prev[touchedPlayer.fromField].filter(p => p.id !== touchedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: touchedPlayer.position || 'Custom',
+      player: {
+        id: touchedPlayer.id,
+        name: touchedPlayer.name,
+        number: touchedPlayer.number,
+        position: touchedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== touchedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== touchedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const removePath = (pathId) => {
+    setPaths(prev => prev.filter(path => path.id !== pathId));
+  };
+
+  const removeText = (textId) => {
+    setTexts(prev => prev.filter(text => text.id !== textId));
+  };
+
+  const clearAllDrawings = (fieldId) => {
+    setPaths(prev => prev.filter(path => path.fieldId !== fieldId));
+    setTexts(prev => prev.filter(text => text.fieldId !== fieldId));
+  };
+
+  const exportFormation = () => {
+    const data = {
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths, // Include paths in export
+      texts: texts, // Include texts in export
+      exported: new Date().toISOString(),
+      totalPlayers: Object.values(fieldPlayers).flat().filter(p => p.player).length
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `salibandy_formation_${selectedSeason}_${Date.now()}.json`;
+    link.click();
+  };
+
+  const saveCurrentFormation = () => {
+    const name = prompt('Anna kokoonpanolle nimi:');
+    if (!name) return;
+
+    const formation = {
+      id: Date.now(),
+      name,
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths, // Include paths in saved formation
+      texts: texts, // Include texts in saved formation
+      created: new Date().toISOString()
+    };
+
+    const updated = [...formations, formation];
+    saveFormations(updated);
+    alert('Kokoonpano tallennettu!');
+  };
+
+  const loadSavedFormation = (formation) => {
+    setFieldPlayers(formation.fields || formation.positions); // Handle both old and new format
+    setPaths(formation.paths || []); // Load paths if they exist
+    setTexts(formation.texts || []); // Load texts if they exist
+  };
+
+  // Add these touch event handlers
+
+  const handleTouchStart = (player) => {
+    if (!effectiveTouchMode) return;
+    setTouchedPlayer(player);
+  };
+
+  const handleTouchEnd = (e, positionId, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer) return;
+    e.preventDefault();
+    
+    // Update the specific field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].map(pos => {
+        if (pos.id === positionId) {
+          return { ...pos, player: touchedPlayer };
+        }
+        // Remove player from other positions in this field
+        if (pos.player && pos.player.id === touchedPlayer.id) {
+          return { ...pos, player: null };
+        }
+        return pos;
+      })
+    }));
+
+    // Also remove from other fields
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].map(pos => 
+            pos.player && pos.player.id === touchedPlayer.id 
+              ? { ...pos, player: null } 
+              : pos
+          );
+        }
+      });
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handleFieldTouchEnd = (e, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer || !fieldRefs.current[fieldName]) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (touchedPlayer.fromField && touchedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [touchedPlayer.fromField]: prev[touchedPlayer.fromField].filter(p => p.id !== touchedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: touchedPlayer.position || 'Custom',
+      player: {
+        id: touchedPlayer.id,
+        name: touchedPlayer.name,
+        number: touchedPlayer.number,
+        position: touchedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== touchedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== touchedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handlePlayerTouchStart = (e, playerId, fieldName) => {
+    if (!effectiveTouchMode) return;
+    // Store the player being dragged from the field
+    const player = fieldPlayers[fieldName]?.find(p => p.id === playerId)?.player;
+    if (player) {
+      setTouchedPlayer({ ...player, fromField: fieldName, fromPositionId: playerId });
+    }
+  };
+
+  // Mobile layout adjustments
+  useEffect(() => {
+    // Mobile-specific layout adjustments
+    const adjustForMobile = () => {
+      if (isTouchDevice) {
+        // Make positions slightly larger on mobile for easier touch targets
+        document.documentElement.style.setProperty('--player-size', '18px');
+        document.documentElement.style.setProperty('--field-min-height', '250px');
+      } else {
+        document.documentElement.style.setProperty('--player-size', '14px');
+        document.documentElement.style.removeProperty('--field-min-height');
+      }
+    };
+    
+    adjustForMobile();
+    
+    return () => {
+      // Cleanup
+      document.documentElement.style.removeProperty('--player-size');
+      document.documentElement.style.removeProperty('--field-min-height');
+    };
+  }, [isTouchDevice]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full"
+        />
+        <span className="ml-4 text-white text-xl">Ladataan pelaajatietoja...</span>
+      </div>
+    );
+</original_code>```
+
+## ModifyBefore
+```
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  RotateCcw, 
+  Save, 
+  Download, 
+  Upload, 
+  Users, 
+  Target,
+  Settings,
+  Trash2,
+  Edit,
+  Share2,
+  PenTool,
+  Type
+} from 'lucide-react';
+import Reveal from '../components/Reveal';
+import { getPlayerStatsFromCSV, getComprehensivePlayerAndGoalieLists } from '../utils/csvDataLoader';
+
+export default function Formation() {
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [availableSeasons, setAvailableSeasons] = useState([]);
+  const [selectedSeason, setSelectedSeason] = useState('2023-2024'); // Use last year by default
+  const [formations, setFormations] = useState([]);
+  const [draggedPlayer, setDraggedPlayer] = useState(null);
+  const [fieldPlayers, setFieldPlayers] = useState({
+    players1: [],
+    tactics1: []
+  });
+  const fieldRefs = useRef({
+    field1: null,
+    field2: null,
+    field3: null
+  });
+  const [activeField, setActiveField] = useState('field1');
+  const [loading, setLoading] = useState(true);
+  const [fields, setFields] = useState([
+    { id: 'players1', type: 'players', name: 'Kentälliset 1' },
+    { id: 'tactics1', type: 'tactics', name: 'Taktiikka 1' }
+  ]);
+  const [editingFieldId, setEditingFieldId] = useState(null);
+  const [editingFieldName, setEditingFieldName] = useState('');
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [manualTouchMode, setManualTouchMode] = useState(false); // New state for manual touch mode toggle
+  const [touchedPlayer, setTouchedPlayer] = useState(null);
+  const [selectedPlayerDetails, setSelectedPlayerDetails] = useState(null);
+  const [selectedPlayerStats, setSelectedPlayerStats] = useState(null);
+  const [availablePlayers, setAvailablePlayers] = useState([]);
+  const [drawMode, setDrawMode] = useState(null); // 'pen', 'text', or null
+  const [drawing, setDrawing] = useState(false);
+  const [currentPath, setCurrentPath] = useState([]);
+  const [paths, setPaths] = useState([]); // [{id, points: [{x, y}, ...], color, width, fieldId}]
+  const [texts, setTexts] = useState([]); // [{id, x, y, text, size, fieldId}]
+  const [currentText, setCurrentText] = useState('');
+  const [textInputPosition, setTextInputPosition] = useState({ x: 0, y: 0 });
+  const [activeFieldForDrawing, setActiveFieldForDrawing] = useState(null);
+  const [drawingColor, setDrawingColor] = useState('#ff6600'); // Default orange color
+  const [drawingWidth, setDrawingWidth] = useState(2); // Default width
+  const [textSize, setTextSize] = useState('medium'); // small, medium, large
+
+  // Player image mapping - maps player names to their actual image filenames
+  const playerImageMap = {
+    'Mika Aaltonen': 'Mika.jpg',
+    'Mika Ahven': 'Ahven.jpg', 
+    'Jesse Höykinpuro': 'Jesse.jpg',
+    'Henri Kananen': 'Kananen.jpg',
+    'Juha Kiilunen': 'Jimi.jpg',
+    'Jimi Laaksonen': 'Jimi.jpg',
+    'Akseli Nykänen': 'Akseli.jpg',
+    'Niko Nynäs': 'Niko.jpg',
+    'Miika Oja-Nisula': 'Miika.jpg',
+    'Joonas Leppänen': 'Joonas.jpg',
+    'Joni Vainio': 'Joni.jpg', 
+    'Petri Vikman': 'Petri.jpg',
+    'Ville Mäenranta': 'Ville.jpg',
+    'Vesa Halme': 'Veikka.jpg',
+    'Matias Virta': 'Masto.jpg',
+    'Lassi Liukkonen': 'Opa.jpg'
+  };
+
+  // Complete player media information with images and videos
+  const PLAYER_MEDIA = [
+    { name: "Mika Aaltonen", img: "/Mika.jpg", video: "/Mika.mp4" },
+    { name: "Petri Vikman", img: "/Petri.jpg", video: "/Petri.mp4" },
+    { name: "Miika Oja-Nisula", img: "/Miika.jpg", video: "/Miika.mp4" },
+    { name: "Akseli Nykänen", img: "/Akseli.jpg", video: "/Akseli.mp4" },
+    { name: "Joni Vainio", img: "/Joni.jpg", video: "/Joni.mp4" },
+    { name: "Vesa Halme", img: "/Veikka.jpg", video: "/Veikka.mp4" },
+    { name: "Ville Mäenranta", img: "/Ville.jpg", video: "/Ville.mp4" },
+    { name: "Mika Ahven", img: "/Ahven.jpg", video: "/Ahven.mp4" },
+    { name: "Henri Kananen", img: "/Kananen.jpg", video: null },
+    { name: "Jesse Höykinpuro", img: "/Jesse.jpg", video: null },
+    { name: "Jimi Laaksonen", img: "/Jimi.jpg", video: null },
+    { name: "Niko Nynäs", img: "/Niko.jpg", video: null },
+    { name: "Joonas Leppänen", img: "/Joonas.jpg", video: null },
+    { name: "Matias Virta", img: "/Masto.jpg", video: null },
+    { name: "Lassi Liukkonen", img: "/Opa.jpg", video: null },
+  ];
+
+  // Function to get player image
+  const getPlayerImage = (playerName) => {
+    // First check the PLAYER_MEDIA list for the most accurate information
+    const playerMedia = PLAYER_MEDIA.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+    if (playerMedia && playerMedia.img) {
+      return playerMedia.img.startsWith('/') ? playerMedia.img.substring(1) : playerMedia.img;
+    }
+    
+    // Fall back to playerImageMap
+    if (playerImageMap[playerName]) {
+      return playerImageMap[playerName];
+    }
+    
+    // Use default image if no specific image found
+    return 'gorilla_puku.jpeg';
+  };
+
+  // Function to get player video
+  const getPlayerVideo = (playerName) => {
+    // First check the PLAYER_MEDIA list for the most accurate information
+    const playerMedia = PLAYER_MEDIA.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+    if (playerMedia?.video) {
+      return playerMedia.video;
+    }
+    
+    // For players not in PLAYER_MEDIA, check if they have a video in playerImageMap
+    // This is for backward compatibility
+    const playerInMap = Object.keys(playerImageMap).find(name => name.toLowerCase() === playerName.toLowerCase());
+    if (playerInMap && playerImageMap[playerInMap]) {
+      // Generate video name based on the actual player name in the map
+      const videoName = playerInMap.replace(/\s+/g, '_') + '.mp4';
+      return `/${videoName}`;
+    }
+    
+    // Generate video filename based on player name
+    // Replace spaces with underscores and add .mp4 extension
+    const videoName = playerName.replace(/\s+/g, '_') + '.mp4';
+    return `/${videoName}`;
+  };
+
+  // Detect touch device
+  useEffect(() => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(isTouch);
+    // Set manual touch mode to true by default on touch devices
+    setManualTouchMode(isTouch);
+  }, []);
+
+  // Use manual touch mode setting
+  const effectiveTouchMode = manualTouchMode;
+
+  // Load real player data
+  useEffect(() => {
+    loadPlayerData();
+  }, []);
+
+  useEffect(() => {
+    if (selectedSeason) {
+      loadFormations();
+      initializeFields();
+    }
+  }, [selectedSeason]);
+
+  const loadPlayerData = async () => {
+    try {
+      console.log(' Hockey Loading real player data for floorball formation...');
+      setLoading(true);
+      
+      // Use the comprehensive data loader to get all players including those from pelaajat.csv
+      const data = await getComprehensivePlayerAndGoalieLists();
+      
+      if (data && (data.players.length > 0 || data.goalies.length > 0)) {
+        // We only want field players, not goalies
+        setAllPlayers(data.players);
+        setAvailableSeasons(data.seasons || ['2024-2025', '2023-2024']);
+        
+        // Set to last year (second season in list or 2023-2024)
+        const lastYear = data.seasons?.[1] || '2023-2024';
+        setSelectedSeason(lastYear);
+        
+        console.log(`✅ Loaded ${data.players.length} players from seasons:`, data.seasons);
+        console.log('👥 Using season for formation:', lastYear);
+      } else {
+        // Fallback to original method if comprehensive data fails
+        const fallbackData = await getPlayerStatsFromCSV();
+        
+        if (fallbackData && fallbackData.players) {
+          setAllPlayers(fallbackData.players);
+          setAvailableSeasons(fallbackData.seasons || ['2024-2025', '2023-2024']);
+          
+          // Set to last year (second season in list or 2023-2024)
+          const lastYear = fallbackData.seasons?.[1] || '2023-2024';
+          setSelectedSeason(lastYear);
+          
+          console.log(`✅ Loaded ${fallbackData.players.length} players from seasons:`, fallbackData.seasons);
+          console.log('👥 Using season for formation:', lastYear);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading player data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Get field players (not goalies) for selected season
+  const getFieldPlayersForSeason = () => {
+    return allPlayers.map(player => {
+      const seasonData = player.seasons?.find(s => s.season === selectedSeason);
+      if (seasonData && seasonData.position !== 'Maalivahti') {
+        return {
+          id: player.name,
+          name: player.name,
+          number: seasonData.number || 'N/A',
+          position: seasonData.position,
+          goals: seasonData.goals || 0,
+          assists: seasonData.assists || 0,
+          points: seasonData.points || 0,
+          games: seasonData.games || 0
+        };
+      }
+      return null;
+    }).filter(Boolean);
+  };
+
+  useEffect(() => {
+    setAvailablePlayers(getFieldPlayersForSeason());
+  }, [allPlayers, selectedSeason]);
+
+  const loadFormations = () => {
+    const saved = localStorage.getItem(`sekta_formations_${selectedSeason}`);
+    if (saved) {
+      setFormations(JSON.parse(saved));
+    }
+  };
+
+  const saveFormations = (newFormations) => {
+    localStorage.setItem(`sekta_formations_${selectedSeason}`, JSON.stringify(newFormations));
+    setFormations(newFormations);
+  };
+
+  // Initialize empty fields for both player lineup and tactics
+  const initializeFields = () => {
+    const initialFields = {};
+    fields.forEach(field => {
+      if (field.type === 'tactics') {
+        // Tactics fields start with default positions
+        const emptyField = [
+          // Defenders (2) - positioned at back
+          { id: 'def1', x: 25, y: 85, role: 'Puolustaja', player: null },
+          { id: 'def2', x: 75, y: 85, role: 'Puolustaja', player: null },
+          // Forwards (3) - positioned at front
+          { id: 'fwd1', x: 20, y: 25, role: 'Hyökkääjä', player: null },
+          { id: 'fwd2', x: 50, y: 15, role: 'Hyökkääjä', player: null },
+          { id: 'fwd3', x: 80, y: 25, role: 'Hyökkääjä', player: null },
+        ];
+        initialFields[field.id] = emptyField.map(p => ({ ...p, id: `${field.id}_${p.id}` }));
+      } else {
+        // Player lineup fields start empty
+        initialFields[field.id] = [];
+      }
+    });
+    
+    setFieldPlayers(initialFields);
+  };
+
+  const handleDragStart = (player) => {
+    setDraggedPlayer(player);
+  };
+
+  const handlePlayerDragStart = (e, playerId, fieldName) => {
+    // Store the player being dragged from the field
+    const player = fieldPlayers[fieldName]?.find(p => p.id === playerId)?.player;
+    if (player) {
+      setDraggedPlayer({ ...player, fromField: fieldName, fromPositionId: playerId });
+    }
+  };
+
+  const addField = (type) => {
+    const newId = `${type}${Date.now()}`;
+    const newField = {
+      id: newId,
+      type,
+      name: type === 'players' ? `Kentälliset ${fields.filter(f => f.type === 'players').length + 1}` : `Taktiikka ${fields.filter(f => f.type === 'tactics').length + 1}`
+    };
+    
+    setFields(prev => [...prev, newField]);
+    
+    // Initialize the new field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [newId]: type === 'tactics' ? [
+        // Default positions for tactics fields
+        { id: `${newId}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+        { id: `${newId}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+        { id: `${newId}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+        { id: `${newId}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+        { id: `${newId}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+      ] : []
+    }));
+  };
+
+  const removeField = (fieldId) => {
+    setFields(prev => prev.filter(f => f.id !== fieldId));
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      delete updated[fieldId];
+      return updated;
+    });
+  };
+
+  const startEditingField = (fieldId, currentName) => {
+    setEditingFieldId(fieldId);
+    setEditingFieldName(currentName);
+  };
+
+  const saveFieldName = () => {
+    if (editingFieldName.trim()) {
+      setFields(prev => prev.map(f => 
+        f.id === editingFieldId ? { ...f, name: editingFieldName.trim() } : f
+      ));
+    }
+    setEditingFieldId(null);
+    setEditingFieldName('');
+  };
+
+  const cancelEditingField = () => {
+    setEditingFieldId(null);
+    setEditingFieldName('');
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, positionId, fieldName) => {
+    e.preventDefault();
+    if (!draggedPlayer) return;
+
+    // Update the specific field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].map(pos => {
+        if (pos.id === positionId) {
+          return { ...pos, player: draggedPlayer };
+        }
+        // Remove player from other positions in this field
+        if (pos.player && pos.player.id === draggedPlayer.id) {
+          return { ...pos, player: null };
+        }
+        return pos;
+      })
+    }));
+
+    // Also remove from other fields
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].map(pos => 
+            pos.player && pos.player.id === draggedPlayer.id 
+              ? { ...pos, player: null } 
+              : pos
+          );
+        }
+      });
+      return updated;
+    });
+
+    setDraggedPlayer(null);
+  };
+
+  const handleFieldDrop = (e, fieldName) => {
+    e.preventDefault();
+    if (!draggedPlayer || !fieldRefs.current[fieldName]) return;
+
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (draggedPlayer.fromField && draggedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [draggedPlayer.fromField]: prev[draggedPlayer.fromField].filter(p => p.id !== draggedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: draggedPlayer.position || 'Custom',
+      player: {
+        id: draggedPlayer.id,
+        name: draggedPlayer.name,
+        number: draggedPlayer.number,
+        position: draggedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== draggedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== draggedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setDraggedPlayer(null);
+  };
+
+  const removePlayerFromField = (positionId, fieldName) => {
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName]?.filter(pos => pos.id !== positionId) || []
+    }));
+  };
+
+  const clearField = (fieldName) => {
+    const field = fields.find(f => f.id === fieldName);
+    if (field?.type === 'tactics') {
+      // Reset tactics field to default positions
+      const emptyField = [
+        { id: `${fieldName}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+        { id: `${fieldName}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+        { id: `${fieldName}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+        { id: `${fieldName}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+        { id: `${fieldName}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+      ];
+      setFieldPlayers(prev => ({ ...prev, [fieldName]: emptyField }));
+    } else {
+      // Clear players field completely
+      setFieldPlayers(prev => ({ ...prev, [fieldName]: [] }));
+    }
+  };
+
+  const clearAllFields = () => {
+    const cleared = {};
+    fields.forEach(field => {
+      if (field.type === 'tactics') {
+        cleared[field.id] = [
+          { id: `${field.id}_def1`, x: 25, y: 85, role: 'Puolustaja', player: null },
+          { id: `${field.id}_def2`, x: 75, y: 85, role: 'Puolustaja', player: null },
+          { id: `${field.id}_fwd1`, x: 20, y: 25, role: 'Hyökkääjä', player: null },
+          { id: `${field.id}_fwd2`, x: 50, y: 15, role: 'Hyökkääjä', player: null },
+          { id: `${field.id}_fwd3`, x: 80, y: 25, role: 'Hyökkääjä', player: null },
+        ];
+      } else {
+        cleared[field.id] = [];
+      }
+    });
+    setFieldPlayers(cleared);
+  };
+
+  // Share formation function
+  const shareFormation = () => {
+    const data = {
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths,
+      texts: texts,
+      exported: new Date().toISOString(),
+      totalPlayers: Object.values(fieldPlayers).flat().filter(p => p.player).length
+    };
+    
+    // Create a shareable link
+    const dataStr = JSON.stringify(data);
+    const encodedData = btoa(encodeURIComponent(dataStr));
+    const shareLink = `${window.location.origin}${window.location.pathname}#formation=${encodedData}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(shareLink).then(() => {
+      alert('Linkki kopioitu leikepöydälle! Voit nyt jakaa sen toiselle valmentajalle.');
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+      // Fallback: show the link in a prompt
+      prompt('Kopioi tämä linkki jakaaksesi kokoonpanon:', shareLink);
+    });
+  };
+
+  // Handle share link on page load
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.startsWith('#formation=')) {
+      try {
+        const encodedData = hash.substring(11); // Remove '#formation='
+        const dataStr = decodeURIComponent(atob(encodedData));
+        const data = JSON.parse(dataStr);
+        
+        // Load the shared formation
+        setSelectedSeason(data.season);
+        setFieldPlayers(data.fields || {});
+        setPaths(data.paths || []);
+        setTexts(data.texts || []);
+        
+        alert('Kokoonpano ladattu jaettavasta linkistä!');
+        
+        // Remove the hash from URL
+        window.history.replaceState(null, null, ' ');
+      } catch (error) {
+        console.error('Error loading shared formation:', error);
+        alert('Virhe ladattaessa jaettua kokoonpanoa.');
+      }
+    }
+  }, []);
+
+  // Drawing functions
+  const startDrawing = (mode, fieldId) => {
+    setDrawMode(mode);
+    setActiveFieldForDrawing(fieldId);
+    if (mode === 'pen') {
+      setCurrentPath([]);
+    }
+  };
+
+  const addTextToField = () => {
+    if (currentText.trim() && activeFieldForDrawing) {
+      const newText = {
+        id: Date.now(),
+        x: textInputPosition.x,
+        y: textInputPosition.y,
+        text: currentText.trim(),
+        size: textSize,
+        fieldId: activeFieldForDrawing
+      };
+      
+      setTexts(prev => [...prev, newText]);
+      setCurrentText('');
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  const handleFieldMouseDown = (e, fieldId) => {
+    if (!drawMode) return;
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    if (drawMode === 'pen') {
+      setDrawing(true);
+      setCurrentPath([{ x, y }]);
+    } else if (drawMode === 'text') {
+      setTextInputPosition({ x, y });
+      setCurrentText('');
+      // We'll show the text input modal in the render section
+    }
+  };
+
+  const handleFieldMouseMove = (e, fieldId) => {
+    if (!drawing || drawMode !== 'pen') return;
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    
+    // Add point to the current path
+    setCurrentPath(prev => [...prev, { x, y }]);
+  };
+
+  const handleFieldMouseUp = (e, fieldId) => {
+    if (!drawMode) return;
+    
+    if (drawMode === 'pen' && drawing && currentPath.length > 1) {
+      // Add the path
+      const newPath = {
+        id: Date.now(),
+        points: currentPath,
+        color: drawingColor,
+        width: drawingWidth,
+        fieldId: fieldId
+      };
+      
+      setPaths(prev => [...prev, newPath]);
+      setCurrentPath([]);
+      setDrawing(false);
+    }
+    
+    if (drawMode !== 'text') {
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  // Touch-based drawing
+  const handleFieldTouchStart = (e, fieldId) => {
+    if (!drawMode) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    
+    if (drawMode === 'pen') {
+      setDrawing(true);
+      setCurrentPath([{ x, y }]);
+    } else if (drawMode === 'text') {
+      setTextInputPosition({ x, y });
+      setCurrentText('');
+      // We'll show the text input modal in the render section
+    }
+  };
+
+  const handleFieldTouchMove = (e, fieldId) => {
+    if (!drawing || drawMode !== 'pen') return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldId].getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    
+    // Add point to the current path
+    setCurrentPath(prev => [...prev, { x, y }]);
+  };
+
+  const handleFieldTouchEnd = (e, fieldId) => {
+    // First check if this is a player placement touch event
+    if (touchedPlayer && fieldRefs.current[fieldId]) {
+      handlePlayerFieldTouchEnd(e, fieldId);
+      return;
+    }
+    
+    // Then handle drawing touch events
+    if (!drawMode) return;
+    
+    if (drawMode === 'pen' && drawing && currentPath.length > 1) {
+      // Add the path
+      const newPath = {
+        id: Date.now(),
+        points: currentPath,
+        color: drawingColor,
+        width: drawingWidth,
+        fieldId: fieldId
+      };
+      
+      setPaths(prev => [...prev, newPath]);
+      setCurrentPath([]);
+      setDrawing(false);
+    }
+    
+    if (drawMode !== 'text') {
+      setDrawMode(null);
+      setActiveFieldForDrawing(null);
+    }
+  };
+
+  const handlePlayerFieldTouchEnd = (e, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer || !fieldRefs.current[fieldName]) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (touchedPlayer.fromField && touchedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [touchedPlayer.fromField]: prev[touchedPlayer.fromField].filter(p => p.id !== touchedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: touchedPlayer.position || 'Custom',
+      player: {
+        id: touchedPlayer.id,
+        name: touchedPlayer.name,
+        number: touchedPlayer.number,
+        position: touchedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== touchedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== touchedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const removePath = (pathId) => {
+    setPaths(prev => prev.filter(path => path.id !== pathId));
+  };
+
+  const removeText = (textId) => {
+    setTexts(prev => prev.filter(text => text.id !== textId));
+  };
+
+  const clearAllDrawings = (fieldId) => {
+    setPaths(prev => prev.filter(path => path.fieldId !== fieldId));
+    setTexts(prev => prev.filter(text => text.fieldId !== fieldId));
+  };
+
+  const exportFormation = () => {
+    const data = {
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths, // Include paths in export
+      texts: texts, // Include texts in export
+      exported: new Date().toISOString(),
+      totalPlayers: Object.values(fieldPlayers).flat().filter(p => p.player).length
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `salibandy_formation_${selectedSeason}_${Date.now()}.json`;
+    link.click();
+  };
+
+  const saveCurrentFormation = () => {
+    const name = prompt('Anna kokoonpanolle nimi:');
+    if (!name) return;
+
+    const formation = {
+      id: Date.now(),
+      name,
+      season: selectedSeason,
+      fields: fieldPlayers,
+      paths: paths, // Include paths in saved formation
+      texts: texts, // Include texts in saved formation
+      created: new Date().toISOString()
+    };
+
+    const updated = [...formations, formation];
+    saveFormations(updated);
+    alert('Kokoonpano tallennettu!');
+  };
+
+  const loadSavedFormation = (formation) => {
+    setFieldPlayers(formation.fields || formation.positions); // Handle both old and new format
+    setPaths(formation.paths || []); // Load paths if they exist
+    setTexts(formation.texts || []); // Load texts if they exist
+  };
+
+  // Add these touch event handlers
+
+  const handleTouchStart = (player) => {
+    if (!effectiveTouchMode) return;
+    setTouchedPlayer(player);
+  };
+
+  const handleTouchEnd = (e, positionId, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer) return;
+    e.preventDefault();
+    
+    // Update the specific field
+    setFieldPlayers(prev => ({
+      ...prev,
+      [fieldName]: prev[fieldName].map(pos => {
+        if (pos.id === positionId) {
+          return { ...pos, player: touchedPlayer };
+        }
+        // Remove player from other positions in this field
+        if (pos.player && pos.player.id === touchedPlayer.id) {
+          return { ...pos, player: null };
+        }
+        return pos;
+      })
+    }));
+
+    // Also remove from other fields
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].map(pos => 
+            pos.player && pos.player.id === touchedPlayer.id 
+              ? { ...pos, player: null } 
+              : pos
+          );
+        }
+      });
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handleFieldTouchEnd = (e, fieldName) => {
+    if (!effectiveTouchMode || !touchedPlayer || !fieldRefs.current[fieldName]) return;
+    e.preventDefault();
+    
+    const rect = fieldRefs.current[fieldName].getBoundingClientRect();
+    const touch = e.changedTouches[0];
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
+    // If player is being moved from another field, remove from original location
+    if (touchedPlayer.fromField && touchedPlayer.fromPositionId) {
+      setFieldPlayers(prev => ({
+        ...prev,
+        [touchedPlayer.fromField]: prev[touchedPlayer.fromField].filter(p => p.id !== touchedPlayer.fromPositionId)
+      }));
+    }
+
+    // Create new position
+    const newPosition = {
+      id: `${fieldName}_custom_${Date.now()}`,
+      x: Math.max(5, Math.min(95, x)),
+      y: Math.max(5, Math.min(95, y)),
+      role: touchedPlayer.position || 'Custom',
+      player: {
+        id: touchedPlayer.id,
+        name: touchedPlayer.name,
+        number: touchedPlayer.number,
+        position: touchedPlayer.position
+      }
+    };
+
+    // Remove player from all fields first (to prevent duplicates)
+    setFieldPlayers(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(field => {
+        if (field !== fieldName) {
+          updated[field] = updated[field].filter(pos => 
+            !pos.player || pos.player.id !== touchedPlayer.id
+          );
+        }
+      });
+      
+      // Add to target field
+      updated[fieldName] = [...(updated[fieldName] || []).filter(pos => 
+        !pos.player || pos.player.id !== touchedPlayer.id
+      ), newPosition];
+      
+      return updated;
+    });
+
+    setTouchedPlayer(null);
+  };
+
+  const handlePlayerTouchStart = (e, playerId, fieldName) => {
+    if (!effectiveTouchMode) return;
+    // Store the player being dragged from the field
+    const player = fieldPlayers[fieldName]?.find(p => p.id === playerId)?.player;
+    if (player) {
+      setTouchedPlayer({ ...player, fromField: fieldName, fromPositionId: playerId });
+    }
+  };
+
+  // Mobile layout adjustments
+  useEffect(() => {
+    // Mobile-specific layout adjustments
+    const adjustForMobile = () => {
+      if (isTouchDevice) {
+        // Make positions slightly larger on mobile for easier touch targets
+        document.documentElement.style.setProperty('--player-size', '18px');
+        document.documentElement.style.setProperty('--field-min-height', '250px');
+      } else {
+        document.documentElement.style.setProperty('--player-size', '14px');
+        document.documentElement.style.removeProperty('--field-min-height');
+      }
+    };
+    
+    adjustForMobile();
+    
+    return () => {
+      // Cleanup
+      document.documentElement.style.removeProperty('--player-size');
+      document.documentElement.style.removeProperty('--field-min-height');
+    };
+  }, [isTouchDevice]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full"
+        />
+        <span className="ml-4 text-white text-xl">Ladataan pelaajatietoja...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <Reveal>
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Target className="text-orange-400" size={32} />
+              <h1 className="text-4xl font-extrabold text-white">Salibandy Kokoonpanot</h1>
+            </div>
+            <p className="text-xl text-white/70">Järjestä kenttäpelaajat (3 hyökkääjää + 2 puolustajaa per kenttä)</p>
+            <p className="text-lg text-white/60 mt-2">Kausi: {selectedSeason} • {availablePlayers.length} kenttäpelaajaa saatavilla</p>
+          </div>
+        </Reveal>
+
+        {/* Mobile Touch Mode Notification */}
+        {isTouchDevice && (
+          <Reveal delay={0.2}>
+            <div className="bg-orange-500/80 text-white p-4 rounded-lg mb-6">
+              <p className="font-bold">Kosketustila käytössä</p>
+              <p className="text-sm">Kosketa ensin pelaajaa, sitten kosketa kenttää tai paikkaa siirtääksesi pelaajan sinne.</p>
+              {touchedPlayer && (
+                <p className="mt-2 font-bold">Valittu pelaaja: {touchedPlayer.name}</p>
+              )}
+            </div>
+          </Reveal>
+        )}
+
+        {/* Controls */}
+        <Reveal delay={0.1}>
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div className="flex items-center gap-4">
+              <select
+                value={selectedSeason}
+                onChange={(e) => setSelectedSeason(e.target.value)}
+                className="bg-card border border-white/20 rounded-lg px-4 py-2 text-white font-semibold min-w-[140px] focus:outline-none focus:ring-2 focus:ring-brand/50"
+              >
+                {availableSeasons.map(season => (
+                  <option key={season} value={season} className="bg-card text-white">
+                    {season}
+                  </option>
+                ))}
+              </select>
+            <div className="flex items-center gap-2">
+              {/* Touch Mode Toggle */}
+              <button
+                onClick={() => setManualTouchMode(!manualTouchMode)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  manualTouchMode 
+                    ? 'bg-orange-500 hover:bg-orange-600 text-white' 
+                    : 'bg-gray-500 hover:bg-gray-600 text-white'
+                }`}
+              >
+                <Settings size={16} />
+                {manualTouchMode ? 'Kosketustila PÄÄLLÄ' : 'Kosketustila POIS'}
+              </button>
+              
+              <button
+                onClick={() => addField('players')}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Users size={16} />
+                Lisää kentälliset
+              </button>
+              
+              <button
+                onClick={() => addField('tactics')}
+                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Target size={16} />
+                Lisää taktiikka
+              </button>
+              
+              <button
+                onClick={clearAllFields}
+                className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Trash2 size={20} />
+                Tyhjennä kaikki kentät
+              </button>
+            </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={saveCurrentFormation}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Save size={20} />
+                Tallenna kokoonpano
+              </button>
+
+              <button
+                onClick={exportFormation}
+                className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Download size={20} />
+                Vie kokoonpano
+              </button>
+              
+              {/* Share Formation Button */}
+              <button
+                onClick={shareFormation}
+                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+              >
+                <Share2 size={20} />
+                Jaa kokoonpano
+              </button>
+              
+              {/* Drawing Tools */}
+              <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
+                <button
+                  onClick={() => startDrawing('pen', activeField)}
+                  className={`p-2 rounded ${drawMode === 'pen' ? 'bg-orange-500' : 'hover:bg-white/20'}`}
+                  title="Piirrä kynällä"
+                >
+                  <PenTool size={16} />
+                </button>
+                <button
+                  onClick={() => startDrawing('text', activeField)}
+                  className={`p-2 rounded ${drawMode === 'text' ? 'bg-orange-500' : 'hover:bg-white/20'}`}
+                  title="Lisää teksti"
+                >
+                  <Type size={16} />
+                </button>
+                
+                {/* Drawing color selector */}
+                {(drawMode === 'pen') && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <div className="flex gap-1">
+                      {['#ff6600', '#ffffff', '#000000', '#ff0000', '#00ff00', '#0000ff'].map(color => (
+                        <button
+                          key={color}
+                          onClick={() => setDrawingColor(color)}
+                          className={`w-4 h-4 rounded-full ${drawingColor === color ? 'ring-2 ring-white' : ''}`}
+                          style={{ backgroundColor: color }}
+                          title={`Vaihda väri: ${color}`}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* Line width selector */}
+                    <div className="flex gap-1 ml-2">
+                      {[1, 2, 4].map(width => (
+                        <button
+                          key={width}
+                          onClick={() => setDrawingWidth(width)}
+                          className={`flex items-center justify-center rounded px-1 ${drawingWidth === width ? 'bg-white/30' : 'bg-white/10'}`}
+                          title={`Vaihda paksuus: ${width}`}
+                        >
+                          <div 
+                            style={{ 
+                              height: `${width}px`, 
+                              width: '12px', 
+                              backgroundColor: drawingColor 
+                            }} 
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Text size selector */}
+                {(drawMode === 'text') && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <div className="flex gap-1">
+                      {[{size: 'small', label: 'S'}, {size: 'medium', label: 'M'}, {size: 'large', label: 'L'}].map(({size, label}) => (
+                        <button
+                          key={size}
+                          onClick={() => setTextSize(size)}
+                          className={`flex items-center justify-center rounded px-2 py-1 ${textSize === size ? 'bg-white/30' : 'bg-white/10'}`}
+                          title={`Tekstikoko: ${size}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {(drawMode === 'pen' || drawMode === 'text') && (
+                  <button
+                    onClick={() => {
+                      setDrawMode(null);
+                      setActiveFieldForDrawing(null);
+                    }}
+                    className="p-2 rounded hover:bg-white/20"
+                    title="Peruuta piirtäminen"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Reveal>
+
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Player List */}
+          <Reveal delay={0.2}>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Users size={24} />
+                Kenttäpelaajat ({availablePlayers.length})
+              </h3>
+              
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {availablePlayers.map(player => (
+                  <motion.div
+                    key={player.id}
+                    draggable={!effectiveTouchMode}
+                    onDragStart={() => handleDragStart(player)}
+                    onTouchStart={() => handleTouchStart(player)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`bg-white/10 border-white/10 hover:border-orange-400/50 ${effectiveTouchMode ? 'active:border-orange-500 active:bg-white/20' : 'cursor-grab active:cursor-grabbing'} rounded-lg p-3 border transition-colors ${touchedPlayer?.id === player.id ? 'border-orange-500 bg-white/20' : ''}`}
+                    onClick={() => {
+                      // Set player details for the modal
+                      const playerDetails = {
+                        ...player,
+                        img: `/${getPlayerImage(player.name)}`,
+                        video: getPlayerVideo(player.name)
+                      };
+                      setSelectedPlayerDetails(playerDetails);
+                      setSelectedPlayerStats(player);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden relative">
+                        <img 
+                          src={`/${getPlayerImage(player.name)}`}
+                          alt={player.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to gradient circle with number if image not found
+                            e.target.style.display = 'none';
+                            e.target.parentElement.classList.add('bg-gradient-to-br', 'from-orange-500', 'to-purple-600');
+                            e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-sm">${player.number || 'N/A'}</div>`;
+                          }}
+                        />
+                        {getPlayerVideo(player.name) && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">▶</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold text-sm">{player.name}</div>
+                        <div className="text-white/60 text-xs">{player.position} • {player.points}p</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+                {availablePlayers.length === 0 && (
+                  <div className="text-white/60 text-center py-8">
+                    Ei kenttäpelaajia kaudelta {selectedSeason}
+                  </div>
+                )}
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Dynamic Fields */}
+          <div className="xl:col-span-3 space-y-6">
+            {fields.map((field, index) => {
+              const currentFieldPlayers = fieldPlayers[field.id] || [];
+              const playerCount = currentFieldPlayers.filter(p => p.player).length;
+              
+              return (
+                <Reveal key={field.id} delay={0.3 + index * 0.1}>
+                  <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        {field.type === 'players' ? <Users size={20} /> : <Target size={20} />}
+                        {editingFieldId === field.id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingFieldName}
+                              onChange={(e) => setEditingFieldName(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveFieldName();
+                                if (e.key === 'Escape') cancelEditingField();
+                              }}
+                              onBlur={saveFieldName}
+                              className="bg-white/20 border border-white/30 rounded px-2 py-1 text-white text-xl font-bold focus:outline-none focus:border-orange-400"
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          <h3 
+                            className="text-xl font-bold text-white cursor-pointer hover:text-orange-300 transition-colors"
+                            onClick={() => startEditingField(field.id, field.name)}
+                            title="Klikkaa muokataksesi nimeä"
+                          >
+                            {field.name}
+                          </h3>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 text-sm">
+                        <span className="text-white/70">
+                          Pelaajia: {playerCount}
+                        </span>
+                        {field.type === 'tactics' && (
+                          <>
+                            <span className="text-orange-400">
+                              H: {currentFieldPlayers.filter(p => p.player && p.role === 'Hyökkääjä').length}
+                            </span>
+                            <span className="text-cyan-400">
+                              P: {currentFieldPlayers.filter(p => p.player && p.role === 'Puolustaja').length}
+                            </span>
+                          </>
+                        )}
+                        <button
+                          onClick={() => clearAllDrawings(field.id)}
+                          className="text-purple-400 hover:text-purple-300 transition-colors"
+                          title="Poista kaikki piirrokset"
+                        >
+                          <PenTool size={16} />
+                        </button>
+                        <button
+                          onClick={() => clearField(field.id)}
+                          className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                          title="Tyhjennä kenttä"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => removeField(field.id)}
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          title="Poista kenttä"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div
+                      ref={el => fieldRefs.current[field.id] = el}
+                      className={`relative w-full aspect-[2/1] min-h-[var(--field-min-height,auto)] rounded-lg border-4 border-white/20 overflow-hidden shadow-2xl ${
+                        field.type === 'players' 
+                          ? 'bg-gradient-to-b from-green-600 to-green-700' 
+                          : 'bg-contain bg-center bg-no-repeat'
+                      } ${touchedPlayer ? 'border-orange-400' : ''} ${drawMode && activeFieldForDrawing === field.id ? 'cursor-crosshair' : ''}`}
+                      style={field.type === 'tactics' ? { 
+                        backgroundImage: 'url(/salibandykentta.png)', 
+                        backgroundColor: '#047857' 
+                      } : {}}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleFieldDrop(e, field.id)}
+                      onTouchStart={(e) => handleFieldTouchStart(e, field.id)}
+                      onTouchMove={(e) => handleFieldTouchMove(e, field.id)}
+                      onTouchEnd={(e) => handleFieldTouchEnd(e, field.id)}
+                      onMouseDown={(e) => handleFieldMouseDown(e, field.id)}
+                      onMouseMove={(e) => handleFieldMouseMove(e, field.id)}
+                      onMouseUp={(e) => handleFieldMouseUp(e, field.id)}
+                      onMouseLeave={(e) => handleFieldMouseUp(e, field.id)}
+                    >
+                      {/* Current path being drawn */}
+                      {drawing && drawMode === 'pen' && activeFieldForDrawing === field.id && currentPath.length > 1 && (
+                        <svg
+                          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                          style={{ zIndex: 10 }}
+                        >
+                          <polyline
+                            points={currentPath.map(point => `${point.x},${point.y}`).join(' ')}
+                            stroke={drawingColor}
+                            strokeWidth={drawingWidth}
+                            fill="none"
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      )}
+                      
+                      {/* Saved Paths */}
+                      {paths.filter(path => path.fieldId === field.id).map(path => (
+                        <svg
+                          key={path.id}
+                          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                          style={{ zIndex: 10 }}
+                        >
+                          <polyline
+                            points={path.points.map(point => `${point.x},${point.y}`).join(' ')}
+                            stroke={path.color}
+                            strokeWidth={path.width}
+                            fill="none"
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      ))}
+                      
+                      {/* Drawing Texts */}
+                      {texts.filter(text => text.fieldId === field.id).map(text => {
+                        // Determine text size class based on size property
+                        const textSizeClass = 
+                          text.size === 'small' ? 'text-xs' : 
+                          text.size === 'large' ? 'text-lg' : 
+                          'text-sm';
+                        
+                        return (
+                          <div
+                            key={text.id}
+                            className={`absolute transform -translate-x-1/2 -translate-y-1/2 bg-black/70 text-white px-2 py-1 rounded ${textSizeClass} pointer-events-auto`}
+                            style={{ 
+                              left: `${text.x}%`, 
+                              top: `${text.y}%`,
+                              zIndex: 10
+                            }}
+                          >
+                            {text.text}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeText(text.id);
+                              }}
+                              className="ml-1 text-red-400 hover:text-red-300"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                      
+                      {/* Player positions */}
+                      {currentFieldPlayers.map((position) => (
+                        <div
+                          key={position.id}
+                          className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                          style={{ 
+                            left: `${position.x}%`, 
+                            top: `${position.y}%` 
+                          }}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, position.id, field.id)}
+                          onTouchEnd={(e) => handleTouchEnd(e, position.id, field.id)}
+                        >
+                          {position.player ? (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="relative group cursor-move"
+                              draggable={!effectiveTouchMode}
+                              onDragStart={(e) => handlePlayerDragStart(e, position.id, field.id)}
+                              onTouchStart={(e) => handlePlayerTouchStart(e, position.id, field.id)}
+                            >
+                              {/* Player Image */}
+                              <div className={`w-[var(--player-size,14px)] h-[var(--player-size,14px)] rounded-full border-3 shadow-lg overflow-hidden relative ${
+                                position.role === 'Hyökkääjä' ? 'border-orange-500' : 
+                                position.role === 'Puolustaja' ? 'border-cyan-500' :
+                                'border-purple-500'
+                              }`}>
+                                <img 
+                                  src={`/${getPlayerImage(position.player.name)}`}
+                                  alt={position.player.name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    // Fallback to colored circle with number if image not found
+                                    e.target.style.display = 'none';
+                                    const bgColor = position.role === 'Hyökkääjä' ? 'from-orange-500 to-red-600' : 
+                                      position.role === 'Puolustaja' ? 'from-blue-500 to-cyan-600' : 'from-purple-500 to-pink-600';
+                                    e.target.parentElement.classList.add('bg-gradient-to-br');
+                                    e.target.parentElement.classList.add(...bgColor.split(' '));
+                                    e.target.parentElement.innerHTML = `<div class="w-full h-full flex items-center justify-center text-white font-bold text-sm">${position.player.number || 'N/A'}</div>`;
+                                  }}
+                                />
+                              </div>
+                              
+                              {/* Player Name */}
+                              <div className="absolute -bottom-7 left-1/2 transform -translate-x-1/2 text-white text-xs font-semibold bg-black/80 px-2 py-1 rounded whitespace-nowrap border border-white/30">
+                                {position.player.name.split(' ')[0]}
+                              </div>
+                              
+                              {/* Remove Button */}
+                              <button
+                                onClick={() => removePlayerFromField(position.id, field.id)}
+                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                              >
+                                ×
+                              </button>
+                            </motion.div>
+                          ) : null}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 text-sm text-white/60">
+                      {isTouchDevice ? (
+                        <div>
+                          <p className="mb-1">📱 Mobiili: Kosketa pelaajaa ja sitten kosketa kenttää tai tyhjää paikkaa asettaaksesi pelaajan</p>
+                          <p>{field.type === 'players' 
+                            ? 'Kosketa pelaajia asettaaksesi ne kentälle'
+                            : 'Kosketa pelaajia ja sitten tyhjiä paikkoja. Oranssi = Hyökkääjä, Sininen = Puolustaja.'
+                          }</p>
+                        </div>
+                      ) : (
+                        <p>{field.type === 'players' 
+                          ? 'Vedä pelaajat kentälle nähdäksesi kentälliset'
+                          : 'Vedä pelaajat kentälle tai tyhjille paikoille. Oranssi = Hyökkääjä, Sininen = Puolustaja. Pelaajia voi siirtellä raahaamalla.'
+                        }</p>
+                      )}
+                    </div>
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+          </div>
+
+        {/* Saved Formations */}
+        {formations.length > 0 && (
+          <Reveal delay={0.6}>
+            <div className="mt-8 bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10">
+              <h3 className="text-xl font-bold text-white mb-4">Tallennetut kokoonpanot ({selectedSeason})</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {formations.map(formation => (
+                  <div
+                    key={formation.id}
+                    className="bg-white/10 rounded-lg p-4 border border-white/10 hover:border-orange-400/50 transition-colors"
+                  >
+                    <h4 className="text-white font-semibold mb-2">{formation.name}</h4>
+                    <p className="text-white/60 text-sm mb-3">
+                      {new Date(formation.created).toLocaleDateString('fi-FI')}
+                    </p>
+                    <div className="text-white/60 text-xs mb-3">
+                      Pelaajia yhteensä: {Object.values(formation.fields || formation.positions || {}).flat().filter(p => p.player).length}
+                    </div>
+                    <button
+                      onClick={() => loadSavedFormation(formation)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-semibold transition-colors"
+                    >
+                      Lataa kokoonpano
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        )}
+
+        {/* Player Details Modal */}
+        <AnimatePresence>
+          {selectedPlayerDetails && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              onClick={() => setSelectedPlayerDetails(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-gray-900/95 rounded-xl p-6 max-w-4xl w-full border border-white/20 max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-2xl font-bold text-white">
+                      {selectedPlayerDetails.name}
+                      <span className="ml-2 text-sm bg-orange-500 px-2 py-1 rounded-full">
+                        {selectedPlayerStats?.position || selectedPlayerDetails.position || 'Pelaaja'} #{selectedPlayerStats?.number || selectedPlayerDetails.number || 'N/A'}
+                      </span>
+                    </h3>
+                    <div className="text-white/70 text-sm mt-1">
+                      {selectedPlayerDetails.seasonHistory?.length || 1} kautta uralla
+                    </div>
+                    
+                    {/* Season Selector */}
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="text-white/70 text-sm">Kausi:</span>
+                      <select
+                        value={selectedSeason}
+                        onChange={async (e) => {
+                          const newSeason = e.target.value;
+                          setSelectedSeason(newSeason);
+                          
+                          // Update the selected player stats for the new season
+                          if (selectedPlayerDetails) {
+                            // Find player stats for the new season
+                            const playerStats = allPlayers.find(p => 
+                              p.name.toLowerCase() === selectedPlayerDetails.name.toLowerCase()
+                            );
+                            
+                            if (playerStats) {
+                              const seasonData = playerStats.seasons?.find(s => s.season === newSeason);
+                              if (seasonData) {
+                                const updatedStats = {
+                                  ...selectedPlayerDetails,
+                                  games: seasonData.games || 0,
+                                  goals: seasonData.goals || 0,
+                                  assists: seasonData.assists || 0,
+                                  points: seasonData.points || 0,
+                                  position: seasonData.position,
+                                  number: seasonData.number || 'N/A'
+                                };
+                                setSelectedPlayerStats(updatedStats);
+                                setSelectedPlayerDetails(updatedStats);
+                              }
+                            }
+                          }
+                        }}
+                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm"
+                      >
+                        {availableSeasons.map(season => (
+                          <option key={season} value={season} className="bg-gray-800">
+                            {season}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPlayerDetails(null)}
+                    className="text-white/60 hover:text-white transition text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Player Media */}
+                <div className="flex flex-col md:flex-row gap-6 mb-6">
+                  <div className="w-full md:w-1/3">
+                    <div className="relative overflow-hidden rounded-lg w-full aspect-square">
+                      {getPlayerVideo(selectedPlayerDetails.name) ? (
+                        <>
+                          <video
+                            src={getPlayerVideo(selectedPlayerDetails.name)}
+                            className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                            controls
+                            muted
+                            playsInline
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                            <div className="w-16 h-16 bg-orange-500/80 rounded-full flex items-center justify-center text-white">
+                              <span className="text-2xl">▶</span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <img
+                          src={`/${getPlayerImage(selectedPlayerDetails.name)}`}
+                          alt={selectedPlayerDetails.name}
+                          className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                          onError={(e) => { e.currentTarget.src = "/gorilla_puku.jpeg"; }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="w-full md:w-2/3">
+                    {/* Current Season Stats */}
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-white mb-4">Kausi {selectedSeason}</h4>
+                      {(selectedPlayerStats?.position || selectedPlayerDetails.position) === 'Maalivahti' ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-green-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🥅</span>
+                            </div>
+                            <div className="text-2xl font-bold text-green-400">{selectedPlayerStats?.games || 0}</div>
+                            <div className="text-white/70 text-sm">Ottelut</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🛡️</span>
+                            </div>
+                            <div className="text-2xl font-bold text-purple-400">
+                              {selectedPlayerStats?.savePercentage ? `${selectedPlayerStats.savePercentage.toFixed(1)}%` : '0.0%'}
+                            </div>
+                            <div className="text-white/70 text-sm">Torjunta%</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-blue-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🏆</span>
+                            </div>
+                            <div className="text-2xl font-bold text-blue-400">{selectedPlayerStats?.wins || 0}</div>
+                            <div className="text-white/70 text-sm">Voitot</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-cyan-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🚫</span>
+                            </div>
+                            <div className="text-2xl font-bold text-cyan-400">{selectedPlayerStats?.shutouts || 0}</div>
+                            <div className="text-white/70 text-sm">Nollapelit</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-green-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🏒</span>
+                            </div>
+                            <div className="text-2xl font-bold text-green-400">{selectedPlayerStats?.games || 0}</div>
+                            <div className="text-white/70 text-sm">Ottelut</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-orange-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">⚽</span>
+                            </div>
+                            <div className="text-2xl font-bold text-orange-400">{selectedPlayerStats?.goals || 0}</div>
+                            <div className="text-white/70 text-sm">Maalit</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-cyan-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🎯</span>
+                            </div>
+                            <div className="text-2xl font-bold text-cyan-400">{selectedPlayerStats?.assists || 0}</div>
+                            <div className="text-white/70 text-sm">Syötöt</div>
+                          </div>
+                          <div className="bg-white/10 rounded-lg p-3 text-center">
+                            <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center mx-auto mb-2">
+                              <span className="text-xl">🏆</span>
+                            </div>
+                            <div className="text-2xl font-bold text-purple-400">{selectedPlayerStats?.points || 0}</div>
+                            <div className="text-white/70 text-sm">Pisteet</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Text Input Modal */}
+        <AnimatePresence>
+          {drawMode === 'text' && activeFieldForDrawing && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              onClick={() => {
+                setDrawMode(null);
+                setActiveFieldForDrawing(null);
+              }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-gray-900/95 rounded-xl p-6 w-full max-w-md border border-white/20"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-xl font-bold text-white mb-4">Lisää teksti</h3>
+                <input
+                  type="text"
+                  value={currentText}
+                  onChange={(e) => setCurrentText(e.target.value)}
+                  placeholder="Syötä teksti..."
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      addTextToField();
+                    }
+                    if (e.key === 'Escape') {
+                      setDrawMode(null);
+                      setActiveFieldForDrawing(null);
+                    }
+                  }}
+                />
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/70 text-sm">Koko:</span>
+                    <div className="flex gap-1">
+                      {[{size: 'small', label: 'S'}, {size: 'medium', label: 'M'}, {size: 'large', label: 'L'}].map(({size, label}) => (
+                        <button
+                          key={size}
+                          onClick={() => setTextSize(size)}
+                          className={`flex items-center justify-center rounded px-2 py-1 text-sm ${
+                            textSize === size 
+                              ? 'bg-orange-500 text-white' 
+                              : 'bg-white/10 text-white/70 hover:bg-white/20'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setDrawMode(null);
+                        setActiveFieldForDrawing(null);
+                      }}
+                      className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    >
+                      Peruuta
+                    </button>
+                    <button
+                      onClick={addTextToField}
+                      disabled={!currentText.trim()}
+                      className={`px-4 py-2 rounded-lg transition-colors ${
+                        currentText.trim()
+                          ? 'bg-orange-500 hover:bg-orange-600 text-white'
+                          : 'bg-gray-500 text-white/50 cursor-not-allowed'
+                      }`}
+                    >
+                      Lisää
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+

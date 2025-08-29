@@ -10,6 +10,7 @@ import { getCurrentSeasonStats } from "../utils/csvDataLoader";
 export default function Home() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMonthly, setShowMonthly] = useState(false);
 
   useEffect(() => {
     loadQuickStats();
@@ -235,6 +236,66 @@ export default function Home() {
         </Reveal>
         <Reveal delay={0.1}>
           <NimenhuutoWidget />
+        </Reveal>
+        
+        {/* Calendar Section */}
+        <Reveal delay={0.2}>
+          <div className="mt-8 grid gap-3">
+            <button
+              onClick={() => setShowMonthly((v) => !v)}
+              className="justify-self-center px-5 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-extrabold"
+            >
+              {showMonthly ? "Piilota kuukausikalenteri" : "Näytä kuukausikalenteri"}
+            </button>
+
+            {showMonthly && (
+              <div className="rounded-xl overflow-hidden border border-white/10 bg-white">
+                {/* NIMENHUUTO.COM KUUKAUSIKALENTERI */}
+                <div style={{ textAlign: "center", backgroundColor: "#fff", border: 0, padding: 0, margin: 0, color: "#000" }}>
+                  <span style={{ float: "right" }}>
+                    <a
+                      target="_parent"
+                      href="https://nimenhuuto.com/"
+                      style={{
+                        color: "#ff8114",
+                        fontWeight: "bold",
+                        fontSize: 20,
+                        fontFamily: "'Myriad Pro', Helvetica, Arial",
+                        fontStyle: "italic",
+                      }}
+                      rel="noreferrer"
+                    >
+                      Nimenhuuto.com
+                    </a>
+                  </span>
+                  <div style={{ textAlign: "left", padding: "10px" }}>
+                    <a href="https://sekta.nimenhuuto.com/" style={{ fontSize: 16, textDecoration: "none", color: "#444" }}>
+                      SekTa kuukausikalenteri
+                    </a>
+                    <div>
+                      »{" "}
+                      <a style={{ color: "#444", fontSize: 12 }} href="https://sekta.nimenhuuto.com/calendar/monthly">
+                        Kalenteri
+                      </a>{" "}
+                      ·{" "}
+                      <a style={{ color: "#444", fontSize: 12 }} href="https://sekta.nimenhuuto.com/player">
+                        Ilmoittautumiset
+                      </a>
+                    </div>
+                  </div>
+
+                  <iframe
+                    style={{ width: "100%", height: 550, border: "none", padding: 0, margin: "10px 0 10px 0" }}
+                    frameBorder="0"
+                    src="https://sekta.nimenhuuto.com/calendar/widget_iframe_monthly_calendar?css=&height=550"
+                    scrolling="auto"
+                    title="Nimenhuuto – kuukausikalenteri"
+                  />
+                </div>
+                {/* /NIMENHUUTO.COM KUUKAUSIKALENTERI */}
+              </div>
+            )}
+          </div>
         </Reveal>
       </section>
     </div>

@@ -17,6 +17,7 @@ import {
   AnimatedPieChart, 
   AnimatedLineChart, 
   AnimatedAreaChart,
+  AnimatedStackedBarChart,
   PlayerRadarChart,
   StatsCard 
 } from '../components/Charts';
@@ -341,7 +342,8 @@ export default function Statistics() {
     { id: 'goalies', label: 'Maalivahdit', icon: Target },
     { id: 'team', label: 'Joukkue', icon: Shield },
     { id: 'history', label: 'Historia', icon: History },
-    { id: 'comparison', label: 'Vertailu', icon: TrendingUp }
+    { id: 'comparison', label: 'Vertailu', icon: TrendingUp },
+    { id: 'detailed', label: 'Yksityiskohtaiset Tilastot', icon: Eye }
   ];
 
   if (loading) {
@@ -544,10 +546,10 @@ export default function Statistics() {
               <select
                 value={selectedSeason}
                 onChange={(e) => setSelectedSeason(e.target.value)}
-                className="bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white font-semibold min-w-[140px]"
+                className="bg-card border border-white/20 rounded-lg px-4 py-2 text-white font-semibold min-w-[140px] focus:outline-none focus:ring-2 focus:ring-brand/50"
               >
                 {availableSeasons.map(season => (
-                  <option key={season} value={season} className="bg-gray-800">
+                  <option key={season} value={season} className="bg-card text-white">
                     {formatSeasonName(season)}
                   </option>
                 ))}
@@ -1031,6 +1033,297 @@ export default function Statistics() {
                 Vertailu vaatii vahintaan kaksi kautta
               </div>
             )}
+          </motion.div>
+        )}
+
+        {selectedTab === 'detailed' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8"
+          >
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-white mb-4">Yksityiskohtaiset Tilastot</h3>
+              <p className="text-white/70">Kaikki tilastot {selectedSeason} kaudelta</p>
+            </div>
+
+            {/* First row of charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Goals per player - Bar chart */}
+              <AnimatedBarChart
+                data={playerStats
+                  .sort((a, b) => (b.goals || 0) - (a.goals || 0))
+                  .slice(0, 15)
+                  .map(p => ({ name: p.name?.split(' ')[0] || 'Unknown', maalit: p.goals || 0 }))}
+                title={`Maalit Pelaajittain (Top 15) - ${selectedSeason}`}
+                xKey="name"
+                yKey="maalit"
+                color="#f97316"
+                height={400}
+              />
+
+              {/* Assists per player - Bar chart */}
+              <AnimatedBarChart
+                data={playerStats
+                  .sort((a, b) => (b.assists || 0) - (a.assists || 0))
+                  .slice(0, 15)
+                  .map(p => ({ name: p.name?.split(' ')[0] || 'Unknown', syotot: p.assists || 0 }))}
+                title={`Syötöt Pelaajittain (Top 15) - ${selectedSeason}`}
+                xKey="name"
+                yKey="syotot"
+                color="#06b6d4"
+                height={400}
+              />
+            </div>
+
+            {/* Second row of charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Points distribution - Pie chart */}
+              <AnimatedPieChart
+                data={playerStats
+                  .filter(p => (p.points || 0) > 0)
+                  .slice(0, 8)
+                  .map(p => ({ name: p.name?.split(' ')[0] || 'Unknown', pisteet: p.points || 0 }))}
+                title={`Pisteiden Jakauma (Top 8) - ${selectedSeason}`}
+                nameKey="name"
+                valueKey="pisteet"
+                height={400}
+              />
+
+              {/* Goals vs Assists - Stacked Bar chart */}
+              <AnimatedStackedBarChart
+                data={playerStats
+                  .sort((a, b) => (b.points || 0) - (a.points || 0))
+                  .slice(0, 10)
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    maalit: p.goals || 0,
+                    syotot: p.assists || 0
+                  }))}
+                title={`Maalit vs Syötöt (Top 10) - ${selectedSeason}`}
+                xKey="name"
+                barKeys={['maalit', 'syotot']}
+                colors={['#f97316', '#06b6d4']}
+                height={400}
+              />
+            </div>
+
+            {/* Third row of charts - Goalies */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Save percentage - Bar chart */}
+              <AnimatedBarChart
+                data={goalieStats
+                  .sort((a, b) => (b.savePercentage || 0) - (a.savePercentage || 0))
+                  .map(p => ({ 
+                    name: p.name?.split(' ')[0] || 'Unknown', 
+                    torjuntaprosentti: p.savePercentage || 0 
+                  }))}
+                title={`Maalivahtien Torjuntaprosentit - ${selectedSeason}`}
+                xKey="name"
+                yKey="torjuntaprosentti"
+                color="#10b981"
+                height={350}
+              />
+
+              {/* Goals against average - Bar chart */}
+              <AnimatedBarChart
+                data={goalieStats
+                  .sort((a, b) => (a.goalsAgainstAverage || 0) - (b.goalsAgainstAverage || 0))
+                  .map(p => ({ 
+                    name: p.name?.split(' ')[0] || 'Unknown', 
+                    pmo: p.goalsAgainstAverage || 0 
+                  }))}
+                title={`Maalivahtien Päästetyt Maalit Ottelua Kohden - ${selectedSeason}`}
+                xKey="name"
+                yKey="pmo"
+                color="#ef4444"
+                height={350}
+              />
+            </div>
+
+            {/* Fourth row of charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Games played - Bar chart */}
+              <AnimatedBarChart
+                data={playerStats
+                  .sort((a, b) => (b.games || 0) - (a.games || 0))
+                  .slice(0, 15)
+                  .map(p => ({ name: p.name?.split(' ')[0] || 'Unknown', pelit: p.games || 0 }))}
+                title={`Pelatut Ottelut - ${selectedSeason}`}
+                xKey="name"
+                yKey="pelit"
+                color="#8b5cf6"
+                height={350}
+              />
+
+              {/* Penalties - Bar chart */}
+              <AnimatedBarChart
+                data={playerStats
+                  .sort((a, b) => (b.penalties || 0) - (a.penalties || 0))
+                  .filter(p => (p.penalties || 0) > 0)
+                  .slice(0, 15)
+                  .map(p => ({ 
+                    name: p.name?.split(' ')[0] || 'Unknown', 
+                    rangaistukset: (p.penalties || 0) * 2 
+                  }))}
+                title={`Jäähyminuutit - ${selectedSeason}`}
+                xKey="name"
+                yKey="rangaistukset"
+                color="#f59e0b"
+                height={350}
+              />
+            </div>
+
+            {/* Fifth row of charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Points per game - Bar chart */}
+              <AnimatedBarChart
+                data={playerStats
+                  .filter(p => (p.games || 0) > 0)
+                  .sort((a, b) => ((b.points || 0) / (b.games || 1)) - ((a.points || 0) / (a.games || 1)))
+                  .slice(0, 15)
+                  .map(p => ({ 
+                    name: p.name?.split(' ')[0] || 'Unknown', 
+                    pisteetPerPeli: (p.games ? (p.points || 0) / p.games : 0).toFixed(2) 
+                  }))}
+                title={`Pisteitä Per Ottelu - ${selectedSeason}`}
+                xKey="name"
+                yKey="pisteetPerPeli"
+                color="#3b82f6"
+                height={350}
+              />
+
+              {/* Win percentage (goalies) - Bar chart */}
+              <AnimatedBarChart
+                data={goalieStats
+                  .filter(g => (g.games || 0) > 0)
+                  .sort((a, b) => ((b.wins || 0) / (b.games || 1)) - ((a.wins || 0) / (a.games || 1)))
+                  .map(g => ({ 
+                    name: g.name?.split(' ')[0] || 'Unknown', 
+                    voittoprosentti: (g.games ? (g.wins || 0) / g.games * 100 : 0).toFixed(1) 
+                  }))}
+                title={`Maalivahtien Voittoprosentti - ${selectedSeason}`}
+                xKey="name"
+                yKey="voittoprosentti"
+                color="#059669"
+                height={350}
+              />
+            </div>
+
+            {/* Sixth row of charts - Radar Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Top scorers radar chart */}
+              <PlayerRadarChart
+                data={playerStats
+                  .sort((a, b) => (b.points || 0) - (a.points || 0))
+                  .slice(0, 5)
+                  .flatMap(p => [
+                    { subject: 'Maalit', A: p.goals || 0, name: p.name?.split(' ')[0] },
+                    { subject: 'Syötöt', A: p.assists || 0, name: p.name?.split(' ')[0] },
+                    { subject: 'Pelit', A: p.games || 0, name: p.name?.split(' ')[0] },
+                    { subject: 'Pisteet', A: p.points || 0, name: p.name?.split(' ')[0] },
+                    { subject: 'Rangaistukset', A: p.penalties || 0, name: p.name?.split(' ')[0] }
+                  ])}
+                title={`Parhaat Pistemiesten Vertailu - ${selectedSeason}`}
+                height={400}
+              />
+
+              {/* Goalie stats radar chart */}
+              <PlayerRadarChart
+                data={goalieStats
+                  .flatMap(g => [
+                    { subject: 'Torjunta%', A: g.savePercentage || 0, name: g.name?.split(' ')[0] },
+                    { subject: 'PMO', A: Math.max(0, 100 - ((g.goalsAgainstAverage || 0) * 20)), name: g.name?.split(' ')[0] },
+                    { subject: 'Pelit', A: g.games || 0, name: g.name?.split(' ')[0] },
+                    { subject: 'Voitot', A: g.wins || 0, name: g.name?.split(' ')[0] },
+                    { subject: 'Nollapelit', A: (g.shutouts || 0) * 10, name: g.name?.split(' ')[0] }
+                  ])}
+                title={`Maalivahtien Suoritusvertailu - ${selectedSeason}`}
+                height={400}
+              />
+            </div>
+
+            {/* Seventh row of charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Position breakdown - Pie chart */}
+              <AnimatedPieChart
+                data={[
+                  { name: 'Hyökkääjät', value: playerStats.filter(p => p.position?.toLowerCase().includes('hyökk')).length },
+                  { name: 'Puolustajat', value: playerStats.filter(p => p.position?.toLowerCase().includes('puol')).length },
+                  { name: 'Maalivahdit', value: goalieStats.length }
+                ]}
+                title={`Pelipaikkajakauma - ${selectedSeason}`}
+                nameKey="name"
+                valueKey="value"
+                height={350}
+              />
+              
+              {/* Goals by position - Pie chart */}
+              <AnimatedPieChart
+                data={[
+                  { 
+                    name: 'Hyökkääjät', 
+                    value: playerStats
+                      .filter(p => p.position?.toLowerCase().includes('hyökk'))
+                      .reduce((sum, p) => sum + (p.goals || 0), 0) 
+                  },
+                  { 
+                    name: 'Puolustajat', 
+                    value: playerStats
+                      .filter(p => p.position?.toLowerCase().includes('puol'))
+                      .reduce((sum, p) => sum + (p.goals || 0), 0) 
+                  }
+                ]}
+                title={`Maalit Pelipaikan Mukaan - ${selectedSeason}`}
+                nameKey="name"
+                valueKey="value"
+                height={350}
+              />
+              
+              {/* Games distribution - Pie chart */}
+              <AnimatedPieChart
+                data={playerStats
+                  .sort((a, b) => (b.games || 0) - (a.games || 0))
+                  .slice(0, 8)
+                  .map(p => ({ 
+                    name: p.name?.split(' ')[0] || 'Unknown', 
+                    value: p.games || 0 
+                  }))}
+                title={`Pelatut Ottelut (Top 8) - ${selectedSeason}`}
+                nameKey="name"
+                valueKey="value"
+                height={350}
+              />
+            </div>
+
+            {/* Eighth row - Team stats cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatsCard
+                title="Yhteensä Maaleja"
+                value={teamStats.totalGoals || 0}
+                icon="🥅"
+                color="#f97316"
+              />
+              <StatsCard
+                title="Yhteensä Syöttöjä"
+                value={teamStats.totalAssists || 0}
+                icon="🎯"
+                color="#06b6d4"
+              />
+              <StatsCard
+                title="Yhteensä Pisteitä"
+                value={teamStats.totalPoints || 0}
+                icon="🏆"
+                color="#8b5cf6"
+              />
+              <StatsCard
+                title="Keskipisteet/Peli"
+                value={(teamStats.totalPoints / Math.max(teamStats.totalGames || 1, 1)).toFixed(1)}
+                icon="📊"
+                color="#10b981"
+              />
+            </div>
           </motion.div>
         )}
 
