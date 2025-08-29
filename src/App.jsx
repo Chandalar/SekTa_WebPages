@@ -12,7 +12,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const History = lazy(() => import("./pages/History"));
 const Statistics = lazy(() => import("./pages/Statistics"));
 const Admin = lazy(() => import("./pages/Admin"));
-const Formation = lazy(() => import("./pages/Formation"));
+const Tactics = lazy(() => import("./pages/Tactics"));
 
 export default function App() {
   const location = useLocation();
@@ -29,7 +29,7 @@ export default function App() {
               <Route path="/uutiset" element={<PageTransition><News /></PageTransition>} />
               <Route path="/yhteys" element={<PageTransition><Contact /></PageTransition>} />
               <Route path="/historia" element={<PageTransition><History /></PageTransition>} />
-              <Route path="/taktiikka" element={<PageTransition><Formation /></PageTransition>} />
+              <Route path="/taktiikka" element={<PageTransition><Tactics /></PageTransition>} />
               <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
             </Routes>
           </AnimatePresence>
