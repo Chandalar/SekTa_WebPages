@@ -6,12 +6,14 @@ import { AnimatedBarChart, AnimatedPieChart, PlayerRadarChart, StatsCard } from 
 import { getPlayerStatsFromCSV, generateProperCSV, parseComprehensiveCSVData, getComprehensiveGoalieStats, parseGoaliesFromDedicatedCSV, getComprehensivePlayerAndGoalieLists } from "../utils/csvDataLoader";
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
+import { normalizeString } from "../utils/stringUtils";
 
 // Player image mapping - maps player names to their actual image filenames
 const playerImageMap = {
   'Mika Aaltonen': 'mika.jpg',
   'Mika Ahven': 'Ahven.jpg', 
   'Jesse Höykinpuro': 'Jesse.jpg',
+  'Jesse Häykinpuro': 'Jesse.jpg',
   'Henri Kananen': 'Kananen.jpg',
   'Juha Kiilunen': 'Jimi.jpg',
   'Jimi Laaksonen': 'Jimi.jpg',
@@ -29,7 +31,20 @@ const playerImageMap = {
 
 // Function to get player image
 const getPlayerImage = (playerName) => {
-  return playerImageMap[playerName] || `${playerName.split(' ')[0]}.jpg`;
+  // Simple fallback for null values
+  if (!playerName || typeof playerName !== 'string') {
+    return 'gorilla_puku.jpeg';
+  }
+  
+  // Apply normalization
+  const normalizedName = normalizeString(playerName);
+  
+  // Special case for Jesse
+  if (normalizedName.includes('Jesse')) {
+    return 'Jesse.jpg';
+  }
+  
+  return playerImageMap[normalizedName] || `${normalizedName.split(' ')[0]}.jpg`;
 };
 
 const PLAYERS = [
@@ -59,27 +74,25 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
   }, []);
 
   const playerStats = stats?.find(s => {
-    if (!s.name || !p.name) return false;
+    if (!s || !s.name || !p || !p.name) return false;
     
-    // First try exact name match (most reliable)
-    if (s.name.toLowerCase() === p.name.toLowerCase()) {
-      console.log(`✅ Exact match: ${p.name} <-> ${s.name}`, s);
-      return true;
-    }
-    
-    // Then try exact first name + last name match
-    const sNameParts = s.name.toLowerCase().split(' ');
-    const pNameParts = p.name.toLowerCase().split(' ');
-    
-    if (sNameParts.length >= 2 && pNameParts.length >= 2) {
-      const match = sNameParts[0] === pNameParts[0] && sNameParts[1] === pNameParts[1];
-      if (match) {
-        console.log(`✅ Name parts match: ${p.name} <-> ${s.name}`, s);
-        return true;
+    try {
+      // Apply normalization to both names
+      const normalizedStatsName = normalizeString(s.name);
+      const normalizedPlayerName = normalizeString(p.name);
+      
+      // Special case for Jesse Höykinpuro
+      if (normalizedPlayerName.includes('Jesse')) {
+        return normalizedStatsName.includes('Jesse');
       }
+      
+      // Simple matching with normalized names
+      return normalizedStatsName === normalizedPlayerName || 
+             normalizedStatsName.toLowerCase() === normalizedPlayerName.toLowerCase();
+    } catch (error) {
+      console.error("Error in player matching:", error);
+      return false;
     }
-    
-    return false; // No longer fall back to partial matching
   });
   
   // Special debug for Mika Ahven
@@ -146,8 +159,10 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
 
       {/* Name and Number */}
       <div className="flex items-baseline justify-center gap-2 mb-1 mt-auto">
-        <strong className="text-white text-lg">{p.name}</strong>
-        {p.number ? <span className="text-white/60 font-mono">#{p.number}</span> : null}
+        <strong className="text-white text-lg">
+          {p && p.name ? normalizeString(p.name) : 'Player'}
+        </strong>
+        {p && p.number ? <span className="text-white/60 font-mono">#{p.number}</span> : null}
       </div>
       
       {/* Season Stats - Inline compact format without icons */}
@@ -737,19 +752,19 @@ export default function Team() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h3 className="text-2xl font-bold text-white">
-                      {selectedPlayer.name}
-                      {selectedPlayer.position === 'Maalivahti' ? (
+                      {selectedPlayer && selectedPlayer.name ? normalizeString(selectedPlayer.name) : 'Player'}
+                      {selectedPlayer && selectedPlayer.position === 'Maalivahti' ? (
                         <span className="ml-2 text-sm bg-orange-500 px-2 py-1 rounded-full">
-                          Maalivahti #{selectedPlayer.number}
+                          Maalivahti #{selectedPlayer.number || '?'}
                         </span>
-                      ) : (
+                      ) : selectedPlayer ? (
                         <span className="ml-2 text-sm bg-orange-500 px-2 py-1 rounded-full">
-                          {selectedPlayer.position || selectedPlayer.role || 'Pelaaja'} #{selectedPlayer.number}
+                          {selectedPlayer.position || selectedPlayer.role || 'Pelaaja'} #{selectedPlayer.number || '?'}
                         </span>
-                      )}
+                      ) : null}
                     </h3>
                     <div className="text-white/70 text-sm mt-1">
-                      {selectedPlayer.seasonHistory?.length || selectedPlayer.careerStats?.seasonsPlayed || 1} kautta uralla
+                      {selectedPlayer?.seasonHistory?.length || selectedPlayer?.careerStats?.seasonsPlayed || 1} kautta uralla
                     </div>
                     
                     {/* Season Selector */}

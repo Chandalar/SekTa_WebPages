@@ -1,14 +1,14 @@
 import { Link, NavLink } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 
 const LINKS = [
   { to: "/", label: "Etusivu" },
-  { to: "/historia", label: "Historia" },
-  { to: "/joukkue", label: "Joukkue" },
-  { to: "/tilastot", label: "Tilastot" },
-  { to: "/taktiikka", label: "Taktiikka" },
-  { to: "/yhteys", label: "Yhteys" },
+  { to: "/history", label: "Historia" },
+  { to: "/team", label: "Joukkue" },
+  { to: "/statistics", label: "Tilastot" },
+  { to: "/tactics", label: "Taktiikka" },
+  { to: "/contact", label: "Yhteys" },
 ];
 
 export default function Navbar() {
@@ -22,16 +22,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  function handleClick(e) {
-    // Removed punch animation functionality
-  }
-
   return (
     <motion.nav
       initial={{ y: -80 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6 }}
-      className={`fixed w-full z-50 transition-all ${scrolled ? "bg-gradient-to-br from-gray-900/80 via-blue-900/80 to-purple-900/80 backdrop-blur-md shadow-lg" : "bg-gradient-to-br from-gray-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-sm"}`}
+      className={`fixed w-full top-0 left-0 z-50 transition-all ${scrolled ? "bg-gradient-to-br from-gray-900/80 via-blue-900/80 to-purple-900/80 backdrop-blur-md shadow-lg" : "bg-gradient-to-br from-gray-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-sm"}`}
       ref={navRef}
     >
       <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -46,7 +42,6 @@ export default function Navbar() {
               to={link.to}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
-              onClick={handleClick}
               className={({ isActive }) =>
                 [
                   "group relative px-3 py-2 font-bold transition select-none",

@@ -1,6 +1,8 @@
 // Simple CSV-based data loader for SekTa stats
 // Replaces the complex Excel processing system
 
+import { normalizeString } from './stringUtils';
+
 // Cache for loaded data to prevent re-fetching
 let cachedData = null;
 let lastLoadTime = null;
@@ -154,7 +156,7 @@ export async function getPlayerStatsFromCSV() {
     }
     
     // Enhance with static player data (images, numbers, positions)
-    const STATIC_PLAYERS = [
+    const STATIC_PLAYER_DATA = [
       { name: "Mika Aaltonen", role: "Hyökkääjä", number: 19 },
       { name: "Petri Vikman", role: "Hyökkääjä", number: 22 },
       { name: "Miika Oja-Nisula", role: "Hyökkääjä", number: 66 },
@@ -170,11 +172,16 @@ export async function getPlayerStatsFromCSV() {
       { name: "Joonas Leppänen", role: "Puolustaja", number: 44 },
       { name: "Matias Virta", role: "Maalivahti", number: 30 },
       { name: "Lassi Liukkonen", role: "Maalivahti", number: 35 },
+      { name: "Juha Kiilunen", role: "Hyökkääjä", number: 18 },
+      { name: "Veikka Saarinen", role: "Hyökkääjä", number: 14 },
+      { name: "Aleksi Tuokko", role: "Hyökkääjä", number: 77 },
+      { name: "Joonas Pentti", role: "Hyökkääjä", number: 88 },
+      { name: "Vesa Kurppa", role: "Maalivahti", number: 99 }
     ];
     
     // Enhance players with static data
     comprehensiveData.players = comprehensiveData.players.map(player => {
-      const staticData = STATIC_PLAYERS.find(sp => 
+      const staticData = STATIC_PLAYER_DATA.find(sp => 
         sp.name.toLowerCase() === player.name.toLowerCase()
       );
       
@@ -665,211 +672,6 @@ function parsePlayerLine(cells, seasonName) {
   };
 }
 
-// Parse goalies CSV according to project specifications
-// O=games, T%=save percentage, PMO=goals against per game, T=saves, PM=goals against, V=wins, NP=shutouts
-function parseGoaliesCSV(csvText) {
-  console.log('🥅 Parsing goalies CSV data...');
-  const lines = csvText.split('\n');
-  const goalies = [];
-  
-  let currentSeason = null;
-  let currentDivision = null;
-  let headerRowIndex = -1;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    const cells = line.split(',').map(c => c.trim());
-    
-    // Look for season headers like "KAUSI 2024-2025"
-    if (line.includes('KAUSI') && line.includes('20')) {
-      const seasonMatch = line.match(/KAUSI\s+(\d{4}-\d{4})/);
-      if (seasonMatch) {
-        currentSeason = seasonMatch[1];
-        console.log('🏆 Found season:', currentSeason);
-      }
-    }
-    
-    // Look for division information
-    if (line.includes('III-DIV') || line.includes('IV-DIV')) {
-      const divMatch = line.match(/(III-DIV[^,]*|IV-DIV[^,]*)/);
-      if (divMatch && currentSeason) {
-        currentDivision = divMatch[0].trim();
-        console.log('🏆 Found division:', currentDivision);
-      }
-    }
-    
-    // Look for MAALIVAHDIT section
-    if (line.includes('MAALIVAHDIT')) {
-      console.log('🥅 Found goalies section at line', i);
-      continue;
-    }
-    
-    // Look for the header row with O, T%, PMO, T, PM, V, NP
-    if (line.includes('O') && line.includes('T%') && line.includes('PMO')) {
-      headerRowIndex = i;
-      console.log('📋 Found goalie stats header at line', i);
-      continue;
-    }
-    
-    // Look for goalie entries with (MV) designation
-    if (headerRowIndex !== -1 && line.includes('(MV)')) {
-      // Extract goalie name - format: "Name (MV)"
-      const nameMatch = line.match(/([^,]+)\s*\(MV\)/);
-      if (nameMatch) {
-        let playerName = nameMatch[1].trim();
-        
-        // If name is in "Lastname, Firstname" format, convert it
-        if (playerName.includes(',')) {
-          const [lastName, firstName] = playerName.split(',').map(s => s.trim());
-          playerName = `${firstName} ${lastName}`;
-        }
-        
-        // Find the position of the name in the cells
-        const nameCell = cells.find(c => c.includes('(MV)'));
-        const nameIndex = cells.indexOf(nameCell);
-        
-        // Parse goalie statistics starting after the name
-        // Expected order: O, T%, PMO, T, PM, V, NP
-        const statsStartIndex = nameIndex + 1;
-        const games = parseInt(cells[statsStartIndex]) || 0;
-        const savePercentage = parseFloat(cells[statsStartIndex + 1]) || 0;
-        const goalsAgainstAverage = parseFloat(cells[statsStartIndex + 2]) || 0;
-        const saves = parseInt(cells[statsStartIndex + 3]) || 0;
-        const goalsAgainst = parseInt(cells[statsStartIndex + 4]) || 0;
-        const wins = parseInt(cells[statsStartIndex + 5]) || 0;
-        const shutouts = parseInt(cells[statsStartIndex + 6]) || 0;
-        
-        // Convert save percentage from decimal to percentage if needed
-        const normalizedSavePercentage = savePercentage < 1 ? savePercentage * 100 : savePercentage;
-        
-        const seasonName = currentDivision ? `${currentSeason} (${currentDivision})` : currentSeason || '2024-2025';
-        
-        const goalie = {
-          name: playerName,
-          position: 'Maalivahti',
-          season: seasonName,
-          games: games,
-          goals: 0, // Goalies have 0 goals as per spec
-          assists: 0, // Goalies have 0 assists as per spec
-          points: 0, // Goalies have 0 points as per spec
-          penalties: 0,
-          number: 0, // Will be set from static data if available
-          savePercentage: normalizedSavePercentage,
-          goalsAgainstAverage: goalsAgainstAverage,
-          saves: saves,
-          goalsAgainst: goalsAgainst,
-          wins: wins,
-          shutouts: shutouts
-        };
-        
-        if (games > 0) { // Only add goalies with actual game data
-          console.log(`🥅 Parsed goalie: ${playerName} (${seasonName}) - O:${games}, T%:${normalizedSavePercentage.toFixed(1)}%, PMO:${goalsAgainstAverage}, V:${wins}, NP:${shutouts}`);
-          goalies.push(goalie);
-        }
-      }
-    }
-  }
-  
-  console.log(`✅ Parsed ${goalies.length} goalies from CSV`);
-  return goalies;
-}
-
-// Parse skaters CSV
-function parseSkatersCSV(csvText) {
-  console.log('🏃 Parsing skaters CSV data...');
-  const lines = csvText.split('\n');
-  const skaters = [];
-  
-  let currentSeason = null;
-  let currentDivision = null;
-  let headerRowIndex = -1;
-  
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    
-    const cells = line.split(',').map(c => c.trim());
-    
-    // Look for season headers - they appear multiple times in one line for different divisions
-    if (line.includes('KAUSI') && line.includes('20')) {
-      // Extract all season-division combinations from the line
-      const seasonMatches = line.matchAll(/KAUSI\s+(\d{4}-\d{4})[^,]*?([^,]*(?:III-DIV|IV-DIV)[^,]*)/g);
-      for (const match of seasonMatches) {
-        const season = match[1];
-        const division = match[2].trim();
-        console.log(`🏆 Found season-division: ${season} ${division}`);
-      }
-      // For now, just take the first season found
-      const firstSeasonMatch = line.match(/KAUSI\s+(\d{4}-\d{4})/);
-      if (firstSeasonMatch) {
-        currentSeason = firstSeasonMatch[1];
-      }
-    }
-    
-    // Look for division-specific headers in lines that contain multiple divisions
-    if ((line.includes('III-DIV') || line.includes('IV-DIV')) && line.includes('PELAAJAT')) {
-      // This line contains headers for different divisions
-      const divisions = [];
-      const divMatches = line.matchAll(/(III-DIV[^,]*|IV-DIV[^,]*)/g);
-      for (const match of divMatches) {
-        divisions.push(match[1].trim());
-      }
-      if (divisions.length > 0) {
-        currentDivision = divisions[0]; // Take the first division for now
-        console.log('🏆 Found division:', currentDivision);
-      }
-    }
-    
-    // Look for the header row with O, M, S, P, J
-    if (line.includes(',O,') && line.includes(',M,') && line.includes(',S,') && line.includes(',P,')) {
-      headerRowIndex = i;
-      console.log('📋 Found player stats header at line', i);
-      continue;
-    }
-    
-    // Look for player entries (names without MV designation)
-    if (headerRowIndex !== -1 && cells[0] && cells[0].includes(',') && !line.includes('(MV)') && !line.includes('MAALIVAHDIT')) {
-      const nameMatch = cells[0].match(/([^,]+),\s*([^,]+)/);
-      if (nameMatch) {
-        const lastName = nameMatch[1].trim();
-        const firstName = nameMatch[2].trim();
-        const playerName = `${firstName} ${lastName}`;
-        
-        // Parse player statistics - O, M, S, P, J pattern (first 5 numeric values after name)
-        const games = parseInt(cells[1]) || 0;
-        const goals = parseInt(cells[2]) || 0;
-        const assists = parseInt(cells[3]) || 0;
-        const points = parseInt(cells[4]) || 0;
-        const penalties = parseInt(cells[5]) || 0;
-        
-        const seasonName = currentDivision ? `${currentSeason} (${currentDivision})` : currentSeason || '2024-2025';
-        
-        const player = {
-          name: playerName,
-          position: 'Hyökkääjä', // Default, will be updated from static data
-          season: seasonName,
-          games: games,
-          goals: goals,
-          assists: assists,
-          points: points,
-          penalties: penalties,
-          number: 0 // Will be set from static data if available
-        };
-        
-        if (games > 0) { // Only add players with actual game data
-          console.log(`🏃 Parsed skater: ${playerName} (${seasonName}) - O:${games}, M:${goals}, S:${assists}, P:${points}`);
-          skaters.push(player);
-        }
-      }
-    }
-  }
-  
-  console.log(`✅ Parsed ${skaters.length} skaters from CSV`);
-  return skaters;
-}
-
 // Parse the dedicated maalivahdit.csv file with comprehensive goalie statistics
 export async function parseGoaliesFromDedicatedCSV() {
   try {
@@ -911,44 +713,8 @@ export async function parseGoaliesFromDedicatedCSV() {
       
       if (!name || games === 0) continue;
       
-      // Fix character encoding issues
-      let playerName = name.trim()
-        // Fix common Finnish character encoding issues
-        .replace(/Ã¶/g, 'ö')
-        .replace(/Ã¤/g, 'ä')
-        .replace(/Ã¥/g, 'å')
-        .replace(/Ãx96/g, 'Ö')
-        .replace(/Ãx84/g, 'Ä')
-        .replace(/Ãx85/g, 'Å')
-        // Handle other common encoding issues
-        .replace(/Ã©/g, 'é')
-        .replace(/Ã¨/g, 'è')
-        .replace(/Ã¼/g, 'ü')
-        .replace(/Ã±/g, 'ñ')
-        // Also handle the specific known cases
-        .replace(/HÃ¶ykinpuro/g, 'Höykinpuro')
-        .replace(/NykÃ¤nen/g, 'Nykänen')
-        .replace(/NynÃ¤s/g, 'Nynäs')
-        .replace(/MÃ¤enranta/g, 'Mäenranta')
-        .replace(/VehvilÃ¤inen/g, 'Vehviläinen')
-        .replace(/PÃ¶llÃ¤nen/g, 'Pöllänen')
-        .replace(/JÃ¤rvensivu/g, 'Järvensivu')
-        .replace(/MettÃ¤lÃ¤/g, 'Mettälä')
-        .replace(/MÃ¤kilÃ¤/g, 'Mäkilä')
-        .replace(/KurppÃ¤/g, 'Kurppä')
-        .replace(/SÃ¤Ã¤rÃ¤/g, 'Säära')
-        .replace(/LÃ¤Ã¤tti/g, 'Läätti')
-        .replace(/HÃ¤nninen/g, 'Hänninen')
-        .replace(/MÃ¤Ã¤ttÃ¤/g, 'Määttä')
-        .replace(/PÃ¤Ã¤kkÃ¶nen/g, 'Pääkkönen')
-        .replace(/RÃ¤sÃ¤nen/g, 'Räsänen')
-        .replace(/SÃ¶derholm/g, 'Söderholm')
-        .replace(/Ãx96hman/g, 'Öhman')
-        .replace(/BjÃ¶rk/g, 'Björk')
-        .replace(/LÃ¶fgren/g, 'Löfgren')
-        .replace(/GrÃ¶n/g, 'Grön')
-        .replace(/NÃ¤slund/g, 'Näslund')
-        .replace(/HÃ¶glund/g, 'Höglund');
+      // Use basic normalization with special case handling
+      let playerName = normalizeString(name.trim());
       
       // Parse save percentage - remove % sign and convert to number
       let savePercentage = 0;
@@ -985,7 +751,7 @@ export async function parseGoaliesFromDedicatedCSV() {
         shutouts: shutouts
       };
       
-      console.log(`🥅 Parsed goalie: ${name} (${seasonName}) - O:${games}, T%:${savePercentage}%, PMO:${goalsAgainstAverage}, T:${saves}, PM:${goalsAgainst}, V:${wins}, NP:${shutouts}`);
+      console.log(`🥅 Parsed goalie: ${playerName} (${seasonName}) - O:${games}, T%:${savePercentage}%, PMO:${goalsAgainstAverage}, T:${saves}, PM:${goalsAgainst}, V:${wins}, NP:${shutouts}`);
       goalies.push(goalie);
     }
     
@@ -1096,48 +862,16 @@ export async function parsePlayersFromDedicatedCSV() {
       // Parse player name - handle different formats
       let playerName = playerNameRaw;
       if (playerName.includes(',')) {
-        const [lastName, firstName] = playerName.split(',').map(s => s.trim());
-        playerName = `${firstName} ${lastName}`;
+        const parts = playerName.split(',');
+        if (parts.length >= 2) {
+          const lastName = parts[0].trim();
+          const firstName = parts[1].trim();
+          playerName = `${firstName} ${lastName}`;
+        }
       }
       
-      // Fix character encoding issues with a more comprehensive approach
-      playerName = playerName
-        // Fix common Finnish character encoding issues
-        .replace(/Ã¶/g, 'ö')
-        .replace(/Ã¤/g, 'ä')
-        .replace(/Ã¥/g, 'å')
-        .replace(/Ã/g, 'Ö')
-        .replace(/Ã/g, 'Ä')
-        .replace(/Ã/g, 'Å')
-        // Handle other common encoding issues
-        .replace(/Ã©/g, 'é')
-        .replace(/Ã¨/g, 'è')
-        .replace(/Ã¼/g, 'ü')
-        .replace(/Ã±/g, 'ñ')
-        // Also handle the specific known cases
-        .replace(/HÃ¶ykinpuro/g, 'Höykinpuro')
-        .replace(/NykÃ¤nen/g, 'Nykänen')
-        .replace(/NynÃ¤s/g, 'Nynäs')
-        .replace(/MÃ¤enranta/g, 'Mäenranta')
-        .replace(/VehvilÃ¤inen/g, 'Vehviläinen')
-        .replace(/PÃ¶llÃ¤nen/g, 'Pöllänen')
-        .replace(/JÃ¤rvensivu/g, 'Järvensivu')
-        .replace(/MettÃ¤lÃ¤/g, 'Mettälä')
-        .replace(/MÃ¤kilÃ¤/g, 'Mäkilä')
-        .replace(/KurppÃ¤/g, 'Kurppä')
-        .replace(/SÃ¤Ã¤rÃ¤/g, 'Säära')
-        .replace(/LÃ¤Ã¤tti/g, 'Läätti')
-        .replace(/HÃ¤nninen/g, 'Hänninen')
-        .replace(/MÃ¤Ã¤ttÃ¤/g, 'Määttä')
-        .replace(/PÃ¤Ã¤kkÃ¶nen/g, 'Pääkkönen')
-        .replace(/RÃ¤sÃ¤nen/g, 'Räsänen')
-        .replace(/SÃ¶derholm/g, 'Söderholm')
-        .replace(/Ãhman/g, 'Öhman')
-        .replace(/BjÃ¶rk/g, 'Björk')
-        .replace(/LÃ¶fgren/g, 'Löfgren')
-        .replace(/GrÃ¶n/g, 'Grön')
-        .replace(/NÃ¤slund/g, 'Näslund')
-        .replace(/HÃ¶glund/g, 'Höglund');
+      // Apply simple normalization
+      playerName = normalizeString(playerName);
       
       // Create season name with division
       const seasonName = division ? `${season} (${division})` : season;
@@ -1254,10 +988,11 @@ export async function getComprehensiveGoalieStats() {
     ];
     
     goalieData.goalies = goalieData.goalies.map(goalie => {
+      // Apply basic normalization
+      const normalizedName = normalizeString(goalie.name);
+      
       const staticData = GOALIE_STATIC_DATA.find(sg => 
-        sg.name.toLowerCase() === goalie.name.toLowerCase() ||
-        goalie.name.toLowerCase().includes(sg.name.toLowerCase()) ||
-        sg.name.toLowerCase().includes(goalie.name.toLowerCase())
+        sg.name.toLowerCase() === normalizedName.toLowerCase()
       );
       
       if (staticData) {
@@ -1268,6 +1003,9 @@ export async function getComprehensiveGoalieStats() {
           number: staticData.number
         }));
       }
+      
+      // Update the goalie name with normalized version
+      goalie.name = normalizedName;
       
       return goalie;
     });
@@ -1357,10 +1095,11 @@ export async function getComprehensivePlayerAndGoalieLists() {
     
     // Enhance players with static data
     const enhancedPlayers = playerData.players.map(player => {
+      // Apply basic normalization
+      const normalizedName = normalizeString(player.name);
+      
       const staticData = STATIC_PLAYER_DATA.find(sp => 
-        sp.name.toLowerCase() === player.name.toLowerCase() ||
-        player.name.toLowerCase().includes(sp.name.toLowerCase()) ||
-        sp.name.toLowerCase().includes(player.name.toLowerCase())
+        sp.name.toLowerCase() === normalizedName.toLowerCase()
       );
       
       if (staticData) {
@@ -1374,15 +1113,19 @@ export async function getComprehensivePlayerAndGoalieLists() {
         }));
       }
       
+      // Update the player name with normalized version
+      player.name = normalizedName;
+      
       return player;
     });
     
     // Enhance goalies with static data
     const enhancedGoalies = goalieData.goalies.map(goalie => {
+      // Apply basic normalization
+      const normalizedName = normalizeString(goalie.name);
+      
       const staticData = STATIC_PLAYER_DATA.find(sp => 
-        sp.name.toLowerCase() === goalie.name.toLowerCase() ||
-        goalie.name.toLowerCase().includes(sp.name.toLowerCase()) ||
-        sp.name.toLowerCase().includes(goalie.name.toLowerCase())
+        sp.name.toLowerCase() === normalizedName.toLowerCase()
       );
       
       if (staticData) {
@@ -1393,6 +1136,9 @@ export async function getComprehensivePlayerAndGoalieLists() {
           number: staticData.number
         }));
       }
+      
+      // Update the goalie name with normalized version
+      goalie.name = normalizedName;
       
       return goalie;
     });

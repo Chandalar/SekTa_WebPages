@@ -85,21 +85,21 @@ export default function Home() {
           <Reveal delay={0.35}>
             <div className="flex flex-wrap gap-4 mt-8">
               <Link
-                to="/joukkue"
+                to="/team"
                 className="px-8 py-4 bg-orange-500 hover:bg-orange-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
                 <Users size={20} />
                 Tutustu joukkueeseen
               </Link>
               <Link
-                to="/tilastot"
+                to="/statistics"
                 className="px-8 py-4 bg-purple-500 hover:bg-purple-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
                 <BarChart3 size={20} />
                 Katso tilastot
               </Link>
               <Link
-                to="/taktiikka"
+                to="/tactics"
                 className="px-8 py-4 bg-green-500 hover:bg-green-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
                 <Target size={20} />
@@ -217,7 +217,7 @@ export default function Home() {
               
               <div className="text-center mt-8">
                 <Link
-                  to="/tilastot"
+                  to="/statistics"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-purple-600 hover:from-orange-600 hover:to-purple-700 rounded-full font-semibold transition shadow-lg"
                 >
                   <TrendingUp size={20} />

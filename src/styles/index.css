@@ -12,8 +12,18 @@
 }
 
 /* Globaalit */
-html, body, #root { height: 100%; }
-body { background: var(--color-bg); color: var(--color-text); }
+html, body, #root { 
+  height: 100%; 
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body { 
+  background: var(--color-bg); 
+  color: var(--color-text); 
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
 
 /* Fix for dropdown/select elements to ensure options are visible */
 select {
@@ -49,3 +59,17 @@ body.match-day [layoutid="nav-underline"] {
   animation: md-pulse 2s ease-in-out infinite;
 }
 @keyframes md-pulse { 0%,100%{opacity:.7} 50%{opacity:1} }
+
+/* Ensure content is visible and navbar works correctly */
+#root {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Fixed navbar height and spacing */
+.fixed-nav-spacer {
+  height: 64px; /* Should match navbar height */
+}
