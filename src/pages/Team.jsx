@@ -739,14 +739,14 @@ export default function Team() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-hidden"
               onClick={() => setSelectedPlayer(null)}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-gray-900/95 rounded-xl p-6 max-w-4xl w-full border border-white/20 max-h-[90vh] overflow-y-auto"
+                className="bg-gray-900/95 rounded-xl p-6 max-w-4xl w-full border border-white/20 max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent my-4"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-6">
@@ -865,9 +865,9 @@ export default function Team() {
 
                 {/* Season History - Show all seasons directly */}
                 {selectedPlayer.seasonHistory && selectedPlayer.seasonHistory.length > 0 && (
-                  <div className="mb-6">
+                  <div className="mb-6 overflow-y-auto pr-1">
                     <h4 className="text-lg font-semibold text-white mb-3">Kausihistoria</h4>
-                    <div className="space-y-2">
+                    <div className="space-y-2 max-h-[30vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1">
                       {selectedPlayer.seasonHistory.map((season, index) => (
                         <div key={index} className="bg-white/5 rounded p-3">
                           <div className="flex justify-between items-center mb-2">
@@ -934,24 +934,26 @@ export default function Team() {
                 {/* Performance Chart - Remove the current season stats section */}
                 <div>
                   <h4 className="text-lg font-semibold text-white mb-3">{selectedPlayer.name} - Suoritusprofiili</h4>
-                  <PlayerRadarChart
-                    data={selectedPlayer.position === 'Maalivahti' ? [
-                      { subject: 'Ottelut', A: selectedPlayer.games || 0 },
-                      { subject: 'Voitot', A: selectedPlayer.wins || 0 },
-                      { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
-                      { subject: 'Torjunnat', A: Math.min((selectedPlayer.saves || 0) / 10, 100) }, // Scale down saves
-                      { subject: 'Nollapelit', A: (selectedPlayer.shutouts || 0) * 10 }, // Scale up shutouts
-                      { subject: 'Voitto%', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 }
-                    ] : [
-                      { subject: 'Maalit', A: selectedPlayer.goals || 0 },
-                      { subject: 'Syötöt', A: selectedPlayer.assists || 0 },
-                      { subject: 'Pisteet', A: selectedPlayer.points || 0 },
-                      { subject: 'Pelit', A: selectedPlayer.games || 0 },
-                      { subject: 'Rangaistukset', A: selectedPlayer.penalties || 0 },
-                      { subject: 'Pistetehok.', A: selectedPlayer.games > 0 ? (selectedPlayer.points / selectedPlayer.games) * 10 : 0 }
-                    ]}
-                    height={300}
-                  />
+                  <div className="max-h-[30vh] overflow-auto">
+                    <PlayerRadarChart
+                      data={selectedPlayer.position === 'Maalivahti' ? [
+                        { subject: 'Ottelut', A: selectedPlayer.games || 0 },
+                        { subject: 'Voitot', A: selectedPlayer.wins || 0 },
+                        { subject: 'Torjunta%', A: selectedPlayer.savePercentage || 0 },
+                        { subject: 'Torjunnat', A: Math.min((selectedPlayer.saves || 0) / 10, 100) }, // Scale down saves
+                        { subject: 'Nollapelit', A: (selectedPlayer.shutouts || 0) * 10 }, // Scale up shutouts
+                        { subject: 'Voitto%', A: selectedPlayer.games > 0 ? ((selectedPlayer.wins || 0) / selectedPlayer.games) * 100 : 0 }
+                      ] : [
+                        { subject: 'Maalit', A: selectedPlayer.goals || 0 },
+                        { subject: 'Syötöt', A: selectedPlayer.assists || 0 },
+                        { subject: 'Pisteet', A: selectedPlayer.points || 0 },
+                        { subject: 'Pelit', A: selectedPlayer.games || 0 },
+                        { subject: 'Rangaistukset', A: selectedPlayer.penalties || 0 },
+                        { subject: 'Pistetehok.', A: selectedPlayer.games > 0 ? (selectedPlayer.points / selectedPlayer.games) * 10 : 0 }
+                      ]}
+                      height={300}
+                    />
+                  </div>
                 </div>
               </motion.div>
             </motion.div>

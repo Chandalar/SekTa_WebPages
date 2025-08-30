@@ -28,21 +28,19 @@ window.normalizePlayerName = normalizePlayerName;
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 overflow-x-hidden">
       <Navbar />
-      <div className="pt-16"> {/* Add padding top to account for navbar */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/team" element={<Team />} />
-          <Route path="/news" element={<News />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/history" element={<History />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/tactics" element={<Tactics />} />
-          <Route path="/statistics" element={<Statistics />} />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/team" element={<div className="pt-16"><Team /></div>} />
+        <Route path="/news" element={<div className="pt-16"><News /></div>} />
+        <Route path="/calendar" element={<div className="pt-16"><Calendar /></div>} />
+        <Route path="/history" element={<div className="pt-16"><History /></div>} />
+        <Route path="/contact" element={<div className="pt-16"><Contact /></div>} />
+        <Route path="/admin" element={<div className="pt-16"><Admin /></div>} />
+        <Route path="/tactics" element={<div className="pt-16"><Tactics /></div>} />
+        <Route path="/statistics" element={<div className="pt-16"><Statistics /></div>} />
+      </Routes>
     </div>
   );
 }

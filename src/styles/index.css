@@ -69,6 +69,40 @@ body.match-day [layoutid="nav-underline"] {
   overflow-x: hidden;
 }
 
+/* Make scrollbar always visible and not under fixed elements */
+body {
+  overflow-y: auto;
+}
+
+/* Custom scrollbar styles */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-white\/20::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+.scrollbar-track-transparent::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+
 /* Fixed navbar height and spacing */
 .fixed-nav-spacer {
   height: 64px; /* Should match navbar height */

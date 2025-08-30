@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Calendar as CalendarIcon } from "lucide-react";
 
 /**
  * Näyttää vain:
@@ -62,12 +63,13 @@ export default function Calendar() {
       </div>
 
       {/* Kuukausikalenterin toggle */}
-      <div className="mt-8 grid gap-3">
+      <div className="flex flex-col items-center gap-6">
         <button
           onClick={() => setShowMonthly((v) => !v)}
-          className="justify-self-center px-5 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-black font-extrabold"
+          className="px-5 py-2 bg-blue-500 hover:bg-blue-600 rounded-full text-sm font-semibold shadow-lg transition flex items-center gap-2"
         >
-          {showMonthly ? "Piilota kuukausikalenteri" : "Näytä kuukausikalenteri"}
+          <CalendarIcon size={16} />
+          {showMonthly ? "Piilota kalenteri" : "Näytä kalenteri"}
         </button>
 
         {showMonthly && (
