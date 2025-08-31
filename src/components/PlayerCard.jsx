@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { getPlayerImage } from "../utils/playerMedia";
 
 export default function PlayerCard({ player, index }) {
-  const { name, role, img = "/gorilla_puku.jpeg", video, number } = player;
+  const { name, role, img = `/${getPlayerImage(name)}`, video, number } = player;
   const videoRef = useRef(null);
   const [hovered, setHovered] = useState(false);
 

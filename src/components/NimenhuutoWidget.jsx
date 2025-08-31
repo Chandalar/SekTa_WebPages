@@ -72,9 +72,9 @@ export default function NimenhuutoWidget({
   const shown = filtered.slice(0, limit);
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 text-left">
-      <header className="flex items-end justify-between gap-4 mb-3">
-        <h2 className="text-xl font-bold">{title}</h2>
+    <section className="rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/60 via-blue-900/60 to-purple-900/60 backdrop-blur-md p-5 text-left shadow-lg">
+      <header className="flex items-end justify-between gap-4 mb-4">
+        <h2 className="text-xl font-bold tracking-wide text-white">{title}</h2>
 
         {showFilters && (
           <div className="flex gap-2 text-sm">
@@ -82,8 +82,8 @@ export default function NimenhuutoWidget({
               <button
                 key={k}
                 onClick={() => setFilter(k)}
-                className={`px-3 py-1 rounded-lg border transition
-                 ${filter===k ? "bg-orange-500 text-black border-orange-400" : "border-white/15 hover:border-white/30"}`}
+                className={`px-3 py-2 rounded-full font-bold transition
+                 ${filter===k ? "bg-gradient-to-r from-[#6b5bd7] to-[#f2a24a] text-white shadow-md" : "bg-white/10 hover:bg-white/20 text-white"}`}
               >
                 {k}
               </button>
@@ -92,7 +92,7 @@ export default function NimenhuutoWidget({
         )}
       </header>
 
-      {loading && <p className="text-white/70">Ladataan kalenteria…</p>}
+      {loading && <p className="text-[#b7b3d9]">Ladataan kalenteria…</p>}
       {!loading && error && (
         <div className="text-red-300 text-sm leading-relaxed">
           {error}
@@ -100,35 +100,35 @@ export default function NimenhuutoWidget({
       )}
 
       {!loading && !error && shown.length === 0 && (
-        <p className="text-white/70">Ei tulevia tapahtumia.</p>
+        <p className="text-[#b7b3d9]">Ei tulevia tapahtumia.</p>
       )}
 
-      <ul className="grid gap-3">
+      <ul className="grid gap-4">
         {shown.map((ev, i) => (
-          <li key={i} className="rounded-xl border border-white/10 bg-white/5 p-3">
+          <li key={i} className="rounded-xl border border-white/10 bg-[#141129] p-4 hover:-translate-y-1 transition duration-300 shadow-md">
             <div className="flex items-center justify-between gap-3">
-              <div className="text-sm text-white/70 whitespace-nowrap">
+              <div className="text-sm text-[#b7b3d9] whitespace-nowrap">
                 {formatDate(ev.start)} • {formatTime(ev.start, ev.end)}
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full border ${
+              <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                 badgeClass(classify(ev))
               }`}>
                 {classify(ev)}
               </span>
             </div>
-            <div className="mt-1 font-semibold">{ev.summary || "Tapahtuma"}</div>
+            <div className="mt-2 font-bold text-white">{ev.summary || "Tapahtuma"}</div>
             {ev.location && (
-              <div className="text-sm text-white/70">{ev.location}</div>
+              <div className="text-sm text-[#b7b3d9]">{ev.location}</div>
             )}
             {(ev.description || ev.url) && (
-              <div className="mt-2 text-sm text-white/80 leading-relaxed">
+              <div className="mt-3 text-sm text-[#ecebff] leading-relaxed">
                 {ev.description && <p className="whitespace-pre-wrap">{ev.description}</p>}
                 {ev.url && (
                   <a
                     href={ev.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-block mt-1 text-orange-400 underline underline-offset-2"
+                    className="inline-flex items-center mt-2 px-4 py-2 rounded-full bg-gradient-to-r from-[#6b5bd7] to-[#f2a24a] text-white font-bold hover:shadow-lg transition"
                   >
                     Avaa tapahtuma
                   </a>
@@ -139,7 +139,7 @@ export default function NimenhuutoWidget({
         ))}
       </ul>
 
-      <footer className="mt-3 text-right text-xs text-white/50">
+      <footer className="mt-4 text-right text-xs text-[#b7b3d9]">
         Lähde: Nimenhuuto iCal
       </footer>
     </section>
@@ -255,8 +255,8 @@ function classify(ev) {
 
 function badgeClass(tag) {
   switch (tag) {
-    case "Matsi":   return "border-red-400/40 bg-red-400/10";
-    case "Harkka":  return "border-emerald-400/40 bg-emerald-400/10";
-    default:        return "border-white/20 bg-white/5";
+    case "Matsi":   return "bg-gradient-to-r from-red-600 to-orange-500 text-white";
+    case "Harkka":  return "bg-gradient-to-r from-emerald-600 to-teal-500 text-white";
+    default:        return "bg-gradient-to-r from-[#6b5bd7] to-purple-500 text-white";
   }
 }

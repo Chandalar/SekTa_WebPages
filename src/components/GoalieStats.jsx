@@ -9,9 +9,9 @@ import Reveal from "./Reveal";
 // Player image mapping for goalies
 const goalieImageMap = {
   'Mika Ahven': 'Ahven.jpg',
-  'Matias Virta': 'Masto.jpg', 
-  'Lassi Liukkonen': 'Opa.jpg',
-  'Vesa Kurppa': 'Veikka.jpg'
+  'Matias Virta': 'gorilla_puku.jpeg', 
+  'Lassi Liukkonen': 'gorilla_puku.jpeg',
+  'Vesa Kurppa': 'gorilla_puku.jpeg'
 };
 
 const getGoalieImage = (playerName) => {

@@ -7,62 +7,7 @@ import { getPlayerStatsFromCSV, generateProperCSV, parseComprehensiveCSVData, ge
 import { Link } from "react-router-dom";
 import Reveal from "../components/Reveal";
 import { normalizeString } from "../utils/stringUtils";
-
-// Player image mapping - maps player names to their actual image filenames
-const playerImageMap = {
-  'Mika Aaltonen': 'mika.jpg',
-  'Mika Ahven': 'Ahven.jpg', 
-  'Jesse Höykinpuro': 'Jesse.jpg',
-  'Jesse Häykinpuro': 'Jesse.jpg',
-  'Henri Kananen': 'Kananen.jpg',
-  'Juha Kiilunen': 'Jimi.jpg',
-  'Jimi Laaksonen': 'Jimi.jpg',
-  'Akseli Nykänen': 'Akseli.jpg',
-  'Niko Nynäs': 'Niko.jpg',
-  'Miika Oja-Nisula': 'Miika.jpg',
-  'Joonas Leppänen': 'Joonas.jpg',
-  'Joni Vainio': 'Joni.jpg', 
-  'Petri Vikman': 'Petri.jpg',
-  'Ville Mäenranta': 'Ville.jpg',
-  'Vesa Halme': 'Veikka.jpg',
-  'Matias Virta': 'Masto.jpg',
-  'Lassi Liukkonen': 'Opa.jpg'
-};
-
-// Function to get player image
-const getPlayerImage = (playerName) => {
-  // Simple fallback for null values
-  if (!playerName || typeof playerName !== 'string') {
-    return 'gorilla_puku.jpeg';
-  }
-  
-  // Apply normalization
-  const normalizedName = normalizeString(playerName);
-  
-  // Special case for Jesse
-  if (normalizedName.includes('Jesse')) {
-    return 'Jesse.jpg';
-  }
-  
-  return playerImageMap[normalizedName] || `${normalizedName.split(' ')[0]}.jpg`;
-};
-
-const PLAYERS = [
-  { name: "Mika Aaltonen", role: "Hyökkääjä", img: "/Mika.jpg", video: "/Mika.mp4", number: 19 },
-  { name: "Petri Vikman", role: "Hyökkääjä", img: "/Petri.jpg", video: "/Petri.mp4", number: 22 },
-  { name: "Miika Oja-Nisula", role: "Hyökkääjä", img: "/Miika.jpg", video: "/Miika.mp4", number: 66 },
-  { name: "Akseli Nykänen", role: "Hyökkääjä", img: "/Akseli.jpg", video: "/Akseli.mp4", number: 15 },
-  { name: "Joni Vainio", role: "Hyökkääjä", img: "/Joni.jpg", video: "/Joni.mp4", number: 13 },
-  { name: "Vesa Halme", role: "Puolustaja", img: "/Veikka.jpg", video: "/Veikka.mp4", number: 55 },
-  { name: "Ville Mäenranta", role: "Puolustaja", img: "/Ville.jpg", video: "/Ville.mp4", number: 28 },
-  { name: "Mika Ahven", role: "Maalivahti", img: "/Ahven.jpg", video: "/Ahven.mp4", number: 1 },
-  { name: "Henri Kananen", role: "Hyökkääjä", img: "/Kananen.jpg", number: 27 },
-  { name: "Jesse Höykinpuro", role: "Hyökkääjä", img: "/Jesse.jpg", number: 8 },
-  { name: "Jimi Laaksonen", role: "Hyökkääjä", img: "/Jimi.jpg", number: 11 },
-  { name: "Niko Nynäs", role: "Puolustaja", img: "/Niko.jpg", number: 33 },
-  { name: "Joonas Leppänen", role: "Puolustaja", img: "/Joonas.jpg", number: 44 },
-  { name: "Matias Virta", role: "Maalivahti", img: "/Masto.jpg", number: 30 },
-];
+import { getPlayerImage, getPlayerVideo, getAllPlayersWithMedia, getPlayerMediaInfo, enrichPlayerWithMedia } from "../utils/playerMedia";
 
 function PlayerCard({ p, index, stats, onStatsClick }) {
   const videoRef = useRef(null);
@@ -399,19 +344,17 @@ export default function Team() {
     console.log('🎥 Generating dynamic player cards for', seasonPlayers.length, 'players');
     
     // Only show players who have data for the current season
-    const dynamicPlayerCards = seasonPlayers.map((csvPlayer, index) => {
-      // Find static player info if available
-      const staticPlayer = PLAYERS.find(p => 
-        p.name.toLowerCase() === csvPlayer.name.toLowerCase()
-      );
+    const dynamicPlayerCards = seasonPlayers.map((csvPlayer) => {
+      // Get media info from our centralized utility
+      const mediaInfo = getPlayerMediaInfo(csvPlayer.name);
       
       // Create player card with available information
       const playerCard = {
         name: csvPlayer.name,
-        role: csvPlayer.position || staticPlayer?.role || 'Pelaaja',
-        img: staticPlayer?.img || `/${getPlayerImage(csvPlayer.name)}`,
-        video: staticPlayer?.video || null,
-        number: csvPlayer.number || staticPlayer?.number || null,
+        role: csvPlayer.position || mediaInfo.position || 'Pelaaja',
+        img: `/${mediaInfo.image}`,
+        video: mediaInfo.video ? `/${mediaInfo.video}` : null,
+        number: csvPlayer.number || mediaInfo.number || null,
         hasSeasonData: true, // Since we're only including players with season data
         csvData: csvPlayer
       };

@@ -64,7 +64,7 @@ export default function Formation() {
     'Mika Ahven': 'Ahven.jpg', 
     'Jesse Höykinpuro': 'Jesse.jpg',
     'Henri Kananen': 'Kananen.jpg',
-    'Juha Kiilunen': 'Jimi.jpg',
+    'Juha Kiilunen': 'Juha.jpg',
     'Jimi Laaksonen': 'Jimi.jpg',
     'Akseli Nykänen': 'Akseli.jpg',
     'Niko Nynäs': 'Niko.jpg',
@@ -73,9 +73,8 @@ export default function Formation() {
     'Joni Vainio': 'Joni.jpg', 
     'Petri Vikman': 'Petri.jpg',
     'Ville Mäenranta': 'Ville.jpg',
-    'Vesa Halme': 'Veikka.jpg',
-    'Matias Virta': 'Masto.jpg',
-    'Lassi Liukkonen': 'Opa.jpg'
+    'Vesa Halme': 'Vesa.jpg',
+    'Matias Virta': 'Matias.jpg',
   };
 
   // Complete player media information with images and videos
@@ -94,7 +93,6 @@ export default function Formation() {
     { name: "Niko Nynäs", img: "/Niko.jpg", video: null },
     { name: "Joonas Leppänen", img: "/Joonas.jpg", video: null },
     { name: "Matias Virta", img: "/Masto.jpg", video: null },
-    { name: "Lassi Liukkonen", img: "/Opa.jpg", video: null },
   ];
 
   // Function to get player image

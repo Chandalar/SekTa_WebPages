@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { 
   Users, 
   Target,
@@ -13,6 +13,7 @@ import {
   Minus
 } from 'lucide-react';
 import { getComprehensivePlayerAndGoalieLists } from '../utils/csvDataLoader';
+import { getPlayerImage, getPlayerMediaInfo } from '../utils/playerMedia';
 import Reveal from '../components/Reveal';
 
 export default function Tactics() {
@@ -33,30 +34,6 @@ export default function Tactics() {
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const [pendingPlayer, setPendingPlayer] = useState(null);
   const fieldRefs = useRef({});
-
-  // Player image mapping
-  const playerImageMap = {
-    'Mika Aaltonen': 'Mika.jpg',
-    'Mika Ahven': 'Ahven.jpg', 
-    'Jesse Höykinpuro': 'Jesse.jpg',
-    'Henri Kananen': 'Kananen.jpg',
-    'Juha Kiilunen': 'Jimi.jpg',
-    'Jimi Laaksonen': 'Jimi.jpg',
-    'Akseli Nykänen': 'Akseli.jpg',
-    'Niko Nynäs': 'Niko.jpg',
-    'Miika Oja-Nisula': 'Miika.jpg',
-    'Joonas Leppänen': 'Joonas.jpg',
-    'Joni Vainio': 'Joni.jpg', 
-    'Petri Vikman': 'Petri.jpg',
-    'Ville Mäenranta': 'Ville.jpg',
-    'Vesa Halme': 'Veikka.jpg',
-    'Matias Virta': 'Masto.jpg',
-    'Lassi Liukkonen': 'Opa.jpg'
-  };
-
-  const getPlayerImage = (playerName) => {
-    return playerImageMap[playerName] || 'gorilla_puku.jpeg';
-  };
 
   // Detect touch device
   useEffect(() => {
@@ -465,8 +442,8 @@ export default function Tactics() {
             {fields.map((field, index) => (
               <Reveal key={field.id} delay={0.3 + index * 0.1}>
                 <div 
-                  className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 relative"
-                  style={{ width: field.width, height: field.height + 100 }}
+                  className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 relative mb-2"
+                  style={{ width: field.width }}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-2">
