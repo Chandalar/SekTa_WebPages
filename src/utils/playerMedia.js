@@ -12,7 +12,7 @@ import { normalizeString } from './stringUtils';
  * This is the ONLY place that needs to be updated when changing player media
  */
 export const PLAYER_MEDIA = {
-  'Mika Aaltonen': { 
+  'Mika Aalkfdjsltonen': { 
     image: 'Mika.jpg', 
     video: 'Mika.mp4',
     number: 119,
