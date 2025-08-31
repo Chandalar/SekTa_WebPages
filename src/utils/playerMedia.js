@@ -15,7 +15,7 @@ export const PLAYER_MEDIA = {
   'Mika Aaltonen': { 
     image: 'Mika.jpg', 
     video: 'Mika.mp4',
-    number: 19,
+    number: 119,
     position: 'Hyökkääjä'
   },
   'Mika Ahven': { 
