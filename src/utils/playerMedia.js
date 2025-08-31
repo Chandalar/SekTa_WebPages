@@ -13,7 +13,7 @@ import { normalizeString } from './stringUtils';
  */
 export const PLAYER_MEDIA = {
   'Mika Aaltonen': { 
-    image: 'Mika_gorilla.jpeg', 
+    image: 'Mika.jpg', 
     video: 'Mika.mp4',
     number: 19,
     position: 'Hyökkääjä'
