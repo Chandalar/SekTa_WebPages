@@ -30,12 +30,6 @@ export const PLAYER_MEDIA = {
     number: 8,
     position: 'Hyökkääjä'
   },
-  'Jesse Höykinpuro': { 
-    image: 'Jesse.jpg', 
-    video: null,
-    number: 8,
-    position: 'Hyökkääjä'
-  },
   'Henri Kananen': { 
     image: 'Kananen.jpg', 
     video: null,
@@ -113,6 +107,49 @@ export const PLAYER_MEDIA = {
     video: null,
     number: 30,
     position: 'Maalivahti'
+  },
+  // 2025-2026 season players
+  'Niko Aaltonen': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Jerker Bäckström': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Heikki Härkövaara': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Jukka-Pekka Laine': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Ilmari Ollila': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Olli-Pekka Vehviläinen': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
+  },
+  'Aleksi Tuokko': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: null,
+    position: 'Hyökkääjä'
   }
 };
 

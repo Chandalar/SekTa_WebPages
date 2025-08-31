@@ -377,12 +377,12 @@ export async function parseComprehensiveCSVData() {
       }
     });
     
-    // Add seasons from dedicated goalie data
-    dedicatedGoaliesData.seasons.forEach(season => {
-      seasonsSet.add(season);
+    const seasons = Array.from(seasonsSet).sort((a, b) => {
+      // Extract year ranges from season strings like "2025-2026" or "2025-2026 (III-DIV)"
+      const yearA = parseInt(a.split('-')[0]) || 0;
+      const yearB = parseInt(b.split('-')[0]) || 0;
+      return yearB - yearA; // Descending order (latest first)
     });
-    
-    const seasons = Array.from(seasonsSet).sort().reverse();
     console.log('📅 Detected seasons:', seasons);
     
     // Group players by name and season
@@ -711,7 +711,8 @@ export async function parseGoaliesFromDedicatedCSV() {
       const wins = parseInt(cells[8]) || 0; // V (Voitot)
       const shutouts = parseInt(cells[9]) || 0; // NP (Nollapelit)
       
-      if (!name || games === 0) continue;
+      // Allow goalies with 0 games to be included (especially for new seasons)
+      if (!name) continue;
       
       // Use basic normalization with special case handling
       let playerName = normalizeString(name.trim());
@@ -857,7 +858,8 @@ export async function parsePlayersFromDedicatedCSV() {
       const yv = parseInt(cells[9]) || 0; // YV
       const av = parseInt(cells[10]) || 0; // AV
       
-      if (!playerNameRaw || games === 0) continue;
+      // Allow players with 0 games to be included (especially for new seasons)
+      if (!playerNameRaw) continue;
       
       // Parse player name - handle different formats
       let playerName = playerNameRaw;
@@ -948,7 +950,12 @@ export async function parsePlayersFromDedicatedCSV() {
         seasonsSet.add(player.season);
       }
     });
-    const seasons = Array.from(seasonsSet).sort().reverse();
+    const seasons = Array.from(seasonsSet).sort((a, b) => {
+      // Extract year ranges from season strings like "2025-2026" or "2025-2026 (III-DIV)"
+      const yearA = parseInt(a.split('-')[0]) || 0;
+      const yearB = parseInt(b.split('-')[0]) || 0;
+      return yearB - yearA; // Descending order (latest first)
+    });
     
     return {
       players: Object.values(playersByName),
@@ -1145,7 +1152,12 @@ export async function getComprehensivePlayerAndGoalieLists() {
     
     // Combine all seasons
     const allSeasons = new Set([...playerData.seasons, ...goalieData.seasons]);
-    const seasons = Array.from(allSeasons).sort().reverse();
+    const seasons = Array.from(allSeasons).sort((a, b) => {
+      // Extract year ranges from season strings like "2025-2026" or "2025-2026 (III-DIV)"
+      const yearA = parseInt(a.split('-')[0]) || 0;
+      const yearB = parseInt(b.split('-')[0]) || 0;
+      return yearB - yearA; // Descending order (latest first)
+    });
     
     // Calculate career totals for players
     enhancedPlayers.forEach(player => {

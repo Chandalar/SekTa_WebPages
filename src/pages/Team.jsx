@@ -229,8 +229,8 @@ export default function Team() {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('points');
-  const [selectedSeason, setSelectedSeason] = useState('2024-25');
-  const [availableSeasons, setAvailableSeasons] = useState(['2024-25']);
+  const [selectedSeason, setSelectedSeason] = useState(''); // Will be set dynamically
+  const [availableSeasons, setAvailableSeasons] = useState([]);
   const [currentSeasonIndex, setCurrentSeasonIndex] = useState(0);
   const [dynamicPlayers, setDynamicPlayers] = useState([]);
   const [allPlayersAndGoalies, setAllPlayersAndGoalies] = useState([]); // Store combined player data
@@ -285,6 +285,7 @@ export default function Team() {
         // Use the actual seasons from CSV data
         setAvailableSeasons(data.seasons || ['2024-2025']);
         
+        // Select the latest season as default (first in the sorted list)
         const latestSeason = data.seasons?.[0] || '2024-2025';
         setSelectedSeason(latestSeason);
         setCurrentSeasonIndex(0);
@@ -309,6 +310,7 @@ export default function Team() {
         const fallbackData = await getPlayerStatsFromCSV();
         if (fallbackData) {
           setAvailableSeasons(fallbackData.seasons || ['2024-2025']);
+          // Select the latest season as default (first in the sorted list)
           const latestSeason = fallbackData.seasons?.[0] || '2024-2025';
           setSelectedSeason(latestSeason);
           setCurrentSeasonIndex(0);
