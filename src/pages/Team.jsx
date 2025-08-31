@@ -83,23 +83,6 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
         <div className="absolute bottom-2 right-2 bg-orange-500/80 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <BarChart3 size={16} className="text-white" />
         </div>
-        
-        {/* Special red dot for Mika Aaltonen */}
-        {p.name.includes('Mika Aaltonen') && (
-          <div 
-            className="absolute bottom-3 right-12 bg-red-500 rounded-full w-3 h-3 cursor-pointer animate-pulse hover:bg-red-600 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Show Mika's detailed stats
-              onStatsClick({
-                name: 'Mika Aaltonen',
-                specialStats: true,
-                detailedView: true
-              });
-            }}
-            title="Näytä Mikan yksityiskohtaiset tilastot"
-          />
-        )}
       </div>
 
       {/* Name and Number */}
