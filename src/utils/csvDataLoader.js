@@ -107,7 +107,12 @@ export async function getPlayerStatsFromCSV() {
     if (comprehensiveData.players.length === 0) {
       console.log('⚠️ No data from comprehensive parser, falling back to simple CSV...');
       // Fallback to simple CSV if comprehensive parsing fails
-      const response = await fetch('/sekta-stats.csv');
+      const response = await fetch('/sekta-stats.csv', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'text/csv;charset=utf-8',
+        },
+      });
       
       // Check if response is ok before proceeding
       if (!response.ok) {
@@ -326,6 +331,9 @@ export function clearStatsCache() {
   console.log('🗑️ Stats cache cleared');
 }
 
+// Clear cache on module load to ensure fresh data
+clearStatsCache();
+
 // For backward compatibility with existing code
 export async function getAllStats() {
   return await getCurrentSeasonStats();
@@ -336,10 +344,20 @@ export async function parseComprehensiveCSVData() {
   try {
     console.log('📊 Loading comprehensive data from existing CSV files...');
     
-    // Load goalies, skaters, and dedicated maalivahdit files
+    // Load goalies, skaters, and dedicated maalivahdit files with proper headers
     const [goaliesResponse, skatersResponse, dedicatedGoaliesData] = await Promise.all([
-      fetch('/pelaajat-tilastot_goalies.csv'),
-      fetch('/pelaajat-tilastot_skaters.csv'),
+      fetch('/pelaajat-tilastot_goalies.csv', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'text/csv;charset=utf-8',
+        },
+      }),
+      fetch('/pelaajat-tilastot_skaters.csv', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'text/csv;charset=utf-8',
+        },
+      }),
       parseGoaliesFromDedicatedCSV()
     ]);
     
@@ -685,7 +703,13 @@ export async function parseGoaliesFromDedicatedCSV() {
   try {
     console.log('🥅 Loading goalie data from maalivahdit.csv...');
     
-    const response = await fetch('/maalivahdit.csv');
+    // Use a more reliable way to fetch the CSV data
+    const response = await fetch('/maalivahdit.csv', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'text/csv;charset=utf-8',
+      },
+    });
     
     // Check if response is ok before proceeding
     if (!response.ok) {
@@ -836,7 +860,13 @@ export async function parsePlayersFromDedicatedCSV() {
   try {
     console.log('🏃 Loading comprehensive player data from pelaajat.csv...');
     
-    const response = await fetch('/pelaajat.csv');
+    // Use a more reliable way to fetch the CSV data
+    const response = await fetch('/pelaajat.csv', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'text/csv;charset=utf-8',
+      },
+    });
     
     // Check if response is ok before proceeding
     if (!response.ok) {
