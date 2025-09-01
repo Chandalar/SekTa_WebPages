@@ -19,7 +19,7 @@ import Reveal from '../components/Reveal';
 export default function Tactics() {
   const [allPlayers, setAllPlayers] = useState([]);
   const [availableSeasons, setAvailableSeasons] = useState([]);
-  const [selectedSeason, setSelectedSeason] = useState('2024-2025');
+  const [selectedSeason, setSelectedSeason] = useState('');
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([
     { id: 'field1', name: 'Kenttä 1', players: [], width: 600, height: 300 }
@@ -48,14 +48,29 @@ export default function Tactics() {
 
   // Filter available players when all players or season changes
   useEffect(() => {
+    if (!selectedSeason || allPlayers.length === 0) {
+      console.log('Skipping player filter - no selected season or players');
+      return;
+    }
+    
+    console.log('Filtering players for season:', selectedSeason);
+    console.log('All players count:', allPlayers.length);
+    
     // Get all players for the selected season (including goalies)
     const seasonPlayers = allPlayers
       .filter(player => {
-        const seasonData = player.seasons?.find(s => s.season === selectedSeason);
+        // Check if player has data for this season
+        // Use a more flexible matching approach
+        const seasonData = player.seasons?.find(s => 
+          s.season && s.season.trim() === selectedSeason.trim()
+        );
+        console.log(`Player ${player.name} season data for ${selectedSeason}:`, seasonData);
         return seasonData;
       })
       .map(player => {
-        const seasonData = player.seasons.find(s => s.season === selectedSeason);
+        const seasonData = player.seasons.find(s => 
+          s.season && s.season.trim() === selectedSeason.trim()
+        );
         return {
           id: player.name,
           name: player.name,
@@ -68,23 +83,70 @@ export default function Tactics() {
         };
       });
     
+    console.log('Filtered season players count:', seasonPlayers.length);
+    console.log('Filtered season players:', seasonPlayers);
     setAvailablePlayers(seasonPlayers);
   }, [allPlayers, selectedSeason]);
 
   const loadPlayerData = async () => {
     try {
       setLoading(true);
+      console.log('Loading player data...');
       const data = await getComprehensivePlayerAndGoalieLists();
       
+      console.log('Data received:', data);
+      console.log('Seasons:', data?.seasons);
+      console.log('Players:', data?.players?.length);
+      console.log('Goalies:', data?.goalies?.length);
+      
       if (data && (data.players.length > 0 || data.goalies.length > 0)) {
+        // Get the list of goalie names to avoid duplicates
+        const goalieNames = data.goalies.map(goalie => goalie.name);
+        console.log('Goalie names:', goalieNames);
+        
+        // Filter out goalies from the players list to avoid duplicates
+        const filteredPlayers = data.players.filter(player => 
+          !goalieNames.includes(player.name)
+        );
+        console.log('Filtered players (without goalies):', filteredPlayers.length);
+        
         // Combine players and goalies
-        const allPlayers = [...data.players, ...data.goalies];
+        const allPlayers = [...filteredPlayers, ...data.goalies];
+        console.log('Combined players:', allPlayers.length);
         setAllPlayers(allPlayers);
+        
+        // Log all unique seasons from players
+        const playerSeasons = new Set();
+        allPlayers.forEach(player => {
+          player.seasons.forEach(season => {
+            if (season.season) {
+              playerSeasons.add(season.season);
+            }
+          });
+        });
+        console.log('Unique seasons from all players:', Array.from(playerSeasons));
+        
         setAvailableSeasons(data.seasons || ['2024-2025', '2023-2024']);
-        setSelectedSeason(data.seasons?.[0] || '2024-2025');
+        
+        // Set the selected season to the first (latest) season if available
+        if (data.seasons && data.seasons.length > 0) {
+          console.log('Setting selected season to:', data.seasons[0]);
+          setSelectedSeason(data.seasons[0]);
+        } else {
+          console.log('Setting fallback season to 2024-2025');
+          setSelectedSeason('2024-2025');
+        }
+      } else {
+        console.error('No players or goalies found in the data');
+        // Set fallback values
+        setAvailableSeasons(['2024-2025', '2023-2024']);
+        setSelectedSeason('2024-2025');
       }
     } catch (error) {
       console.error('Error loading player data:', error);
+      // Set fallback values in case of error
+      setAvailableSeasons(['2024-2025', '2023-2024']);
+      setSelectedSeason('2024-2025');
     } finally {
       setLoading(false);
     }
@@ -397,6 +459,7 @@ export default function Tactics() {
                             alt={player.name}
                             className="w-full h-full object-cover"
                             onError={(e) => {
+                              console.log('Image load error for player:', player.name, 'image path:', player.img);
                               e.target.style.display = 'none';
                               e.target.parentElement.innerHTML = `
                                 <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold">

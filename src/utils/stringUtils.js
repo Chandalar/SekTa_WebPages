@@ -16,7 +16,14 @@ function normalizeString(text) {
     return 'Jesse Höykinpuro';
   }
   
-  return text;
+  // Replace common problematic characters
+  return text
+    .replace(/\?/g, 'ä')  // Replace ? with ä
+    .replace(/Ã¤/g, 'ä')  // Replace Ã¤ with ä
+    .replace(/Ã¶/g, 'ö')  // Replace Ã¶ with ö
+    .replace(/Ã¥/g, 'å')  // Replace Ã¥ with å
+    .replace(/â€™/g, "'")  // Replace â€™ with '
+    .trim();
 }
 
 // Export the utility functions

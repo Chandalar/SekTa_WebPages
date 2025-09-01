@@ -602,7 +602,8 @@ function parseGoalieLine(cells, seasonName) {
   // Convert save percentage: if it's a decimal (0.8188...), convert to percentage (81.88%)
   const savePercentage = savePercentageRaw < 1 ? savePercentageRaw * 100 : savePercentageRaw;
   
-  if (games === 0) return null;
+  // Allow goalies with 0 games to be included (especially for new seasons)
+  if (!playerName) return null;
   
   console.log(`🥅 Parsed goalie: ${playerName} (${seasonName}) - O:${games}, T%:${savePercentage.toFixed(1)}%, PMO:${goalsAgainstAverage.toFixed(2)}, T:${saves}, PM:${goalsAgainst}, V:${wins}, NP:${shutouts}`);
   
@@ -655,7 +656,8 @@ function parsePlayerLine(cells, seasonName) {
   const points = parseInt(cells[4]) || 0;
   const penalties = parseInt(cells[5]) || 0;
   
-  if (games === 0) return null;
+  // Allow players with 0 games to be included (especially for new seasons)
+  // No need to check playerName again as we already did above
   
   console.log(`🏃 Parsed player: ${playerName} - O:${games}, M:${goals}, S:${assists}`);
   
@@ -797,7 +799,12 @@ export async function parseGoaliesFromDedicatedCSV() {
         seasonsSet.add(goalie.season);
       }
     });
-    const seasons = Array.from(seasonsSet).sort().reverse();
+    const seasons = Array.from(seasonsSet).sort((a, b) => {
+      // Extract year ranges from season strings like "2025-2026" or "2025-2026 (III-DIV)"
+      const yearA = parseInt(a.split('-')[0]) || 0;
+      const yearB = parseInt(b.split('-')[0]) || 0;
+      return yearB - yearA; // Descending order (latest first)
+    });
     
     return {
       goalies: Object.values(goaliesByName),
@@ -830,6 +837,14 @@ export async function parsePlayersFromDedicatedCSV() {
     console.log('📄 Loaded pelaajat.csv:', csvText.length, 'chars');
     
     const lines = csvText.split('\n');
+    console.log('Number of lines in pelaajat.csv:', lines.length);
+    
+    // Check for 2025-2026 season entries
+    const season2025Lines = lines.filter(line => line.includes('2025-2026'));
+    console.log('Number of 2025-2026 entries:', season2025Lines.length);
+    if (season2025Lines.length > 0) {
+      console.log('Sample 2025-2026 line:', season2025Lines[0]);
+    }
     const players = [];
     
     // Parse each line (skip header)
@@ -950,12 +965,17 @@ export async function parsePlayersFromDedicatedCSV() {
         seasonsSet.add(player.season);
       }
     });
+    
+    console.log('Seasons detected in parsePlayersFromDedicatedCSV before sorting:', Array.from(seasonsSet));
+    
     const seasons = Array.from(seasonsSet).sort((a, b) => {
       // Extract year ranges from season strings like "2025-2026" or "2025-2026 (III-DIV)"
       const yearA = parseInt(a.split('-')[0]) || 0;
       const yearB = parseInt(b.split('-')[0]) || 0;
       return yearB - yearA; // Descending order (latest first)
     });
+    
+    console.log('Seasons after sorting:', seasons);
     
     return {
       players: Object.values(playersByName),

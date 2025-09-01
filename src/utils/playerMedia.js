@@ -121,6 +121,12 @@ export const PLAYER_MEDIA = {
     number: null,
     position: 'Hyökkääjä'
   },
+  'Mika Ahven': { 
+    image: 'Ahven.jpg', 
+    video: 'Ahven.mp4',
+    number: 1,
+    position: 'Maalivahti' 
+  },
   'Heikki Härkövaara': { 
     image: 'default_player.jpg', 
     video: null,
@@ -150,7 +156,92 @@ export const PLAYER_MEDIA = {
     video: null,
     number: null,
     position: 'Hyökkääjä'
+  },
+  'Matias Virta': { 
+    image: 'Matias.jpg', 
+    video: null,
+    number: 30,
+    position: 'Maalivahti'
+  },
+  'Lassi Liukkonen': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: 35,
+    position: 'Maalivahti'
+  },
+  'Vesa Kurppa': { 
+    image: 'default_player.jpg', 
+    video: null,
+    number: 99,
+    position: 'Maalivahti'
+  },
+  'Veikka Saarinen': { 
+    image: 'Veikka.jpg', 
+    video: 'Veikka.mp4',
+    number: 14,
+    position: 'Hyökkääjä'
+  },
+  'Vesa Halme': { 
+    image: 'Vesa.jpg', 
+    video: 'Vesa.mp4',
+    number: 55,
+    position: 'Puolustaja'
+  },
+  'Ville Mäenranta': { 
+    image: 'Ville.jpg', 
+    video: 'Ville.mp4',
+    number: 28,
+    position: 'Puolustaja'
+  },
+  'Akseli Nykänen': { 
+    image: 'Akseli.jpg', 
+    video: 'Akseli_gorilla.jpeg',
+    number: 15,
+    position: 'Hyökkääjä'
+  },
+  'Miika Oja-Nisula': { 
+    image: 'Miika.jpg', 
+    video: 'Miika.mp4',
+    number: 66,
+    position: 'Hyökkääjä'
+  },
+  'Joni Vainio': { 
+    image: 'Joni.jpg', 
+    video: 'Joni.mp4',
+    number: 13,
+    position: 'Hyökkääjä'
+  },
+  'Jimi Laaksonen': { 
+    image: 'Jimi.jpg', 
+    video: null,
+    number: 11,
+    position: 'Hyökkääjä'
+  },
+  'Petri Vikman': { 
+    image: 'Petri.jpg', 
+    video: 'Petri.mp4',
+    number: 22,
+    position: 'Hyökkääjä'
+  },
+  'Henri Kananen': { 
+    image: 'Kananen.jpg', 
+    video: null,
+    number: 27,
+    position: 'Hyökkääjä'
+  },
+  'Juha Kiilunen': { 
+    image: 'Juha.jpg', 
+    video: 'Juha.mp4',
+    number: null,
+    position: null
+  },
+  'Jesse Höykinpuro': { 
+    image: 'Jesse.jpg', 
+    video: null,
+    number: 8,
+    position: 'Hyökkääjä'
   }
+
 };
 
 /**
