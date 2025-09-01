@@ -109,8 +109,9 @@ export async function getPlayerStatsFromCSV() {
       // Fallback to simple CSV if comprehensive parsing fails
       const response = await fetch('/sekta-stats.csv');
       
+      // Check if response is ok before proceeding
       if (!response.ok) {
-        throw new Error(`Failed to fetch simple CSV: ${response.status}`);
+        throw new Error(`Failed to fetch simple CSV: ${response.status} ${response.statusText}`);
       }
       
       const csvText = await response.text();
@@ -342,8 +343,13 @@ export async function parseComprehensiveCSVData() {
       parseGoaliesFromDedicatedCSV()
     ]);
     
-    if (!goaliesResponse.ok || !skatersResponse.ok) {
-      throw new Error('Failed to fetch CSV files');
+    // Check if responses are ok before proceeding
+    if (!goaliesResponse.ok) {
+      throw new Error(`Failed to fetch goalies CSV: ${goaliesResponse.status} ${goaliesResponse.statusText}`);
+    }
+    
+    if (!skatersResponse.ok) {
+      throw new Error(`Failed to fetch skaters CSV: ${skatersResponse.status} ${skatersResponse.statusText}`);
     }
     
     const goaliesText = await goaliesResponse.text();
@@ -677,11 +683,13 @@ function parsePlayerLine(cells, seasonName) {
 // Parse the dedicated maalivahdit.csv file with comprehensive goalie statistics
 export async function parseGoaliesFromDedicatedCSV() {
   try {
-    console.log('🥅 Loading comprehensive goalie data from maalivahdit.csv...');
+    console.log('🥅 Loading goalie data from maalivahdit.csv...');
     
     const response = await fetch('/maalivahdit.csv');
+    
+    // Check if response is ok before proceeding
     if (!response.ok) {
-      throw new Error(`Failed to fetch maalivahdit.csv: ${response.status}`);
+      throw new Error(`Failed to fetch maalivahdit.csv: ${response.status} ${response.statusText}`);
     }
     
     const csvText = await response.text();
@@ -829,8 +837,10 @@ export async function parsePlayersFromDedicatedCSV() {
     console.log('🏃 Loading comprehensive player data from pelaajat.csv...');
     
     const response = await fetch('/pelaajat.csv');
+    
+    // Check if response is ok before proceeding
     if (!response.ok) {
-      throw new Error(`Failed to fetch pelaajat.csv: ${response.status}`);
+      throw new Error(`Failed to fetch pelaajat.csv: ${response.status} ${response.statusText}`);
     }
     
     const csvText = await response.text();
