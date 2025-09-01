@@ -26,13 +26,13 @@ export const PLAYER_MEDIA = {
   },
   'Jesse Höykinpuro': { 
     image: 'Jesse.jpg', 
-    video: null,
+    video: 'Jesse.mp4',
     number: 8,
     position: 'Hyökkääjä'
   },
   'Henri Kananen': { 
     image: 'Kananen.jpg', 
-    video: null,
+    video: 'Kananen.mp4',
     number: 27,
     position: 'Hyökkääjä'
   },
@@ -44,13 +44,13 @@ export const PLAYER_MEDIA = {
   },
   'Jimi Laaksonen': { 
     image: 'Jimi.jpg', 
-    video: null,
+    video: 'Jimi.mp4',
     number: 11,
     position: 'Hyökkääjä'
   },
   'Akseli Nykänen': { 
     image: 'Akseli.jpg', 
-    video: 'Akseli_gorilla.jpeg',
+    video: 'Akseli.mp4',
     number: 15,
     position: 'Hyökkääjä'
   },
@@ -59,12 +59,6 @@ export const PLAYER_MEDIA = {
     video: null,
     number: 33,
     position: 'Puolustaja'
-  },
-  'Miika Oja-Nisula': { 
-    image: 'Miika.jpg', 
-    video: 'Miika.mp4',
-    number: 66,
-    position: 'Hyökkääjä'
   },
   'Joonas Leppänen': { 
     image: 'Joonas.jpg', 
@@ -121,13 +115,7 @@ export const PLAYER_MEDIA = {
     number: null,
     position: 'Hyökkääjä'
   },
-  'Mika Ahven': { 
-    image: 'Ahven.jpg', 
-    video: 'Ahven.mp4',
-    number: 1,
-    position: 'Maalivahti' 
-  },
-  'Heikki Härkövaara': { 
+  'Heikki Härmävaara': { 
     image: 'default_player.jpg', 
     video: null,
     number: null,
@@ -152,51 +140,9 @@ export const PLAYER_MEDIA = {
     position: 'Hyökkääjä'
   },
   'Aleksi Tuokko': { 
-    image: 'default_player.jpg', 
-    video: null,
+    image: 'Aleksi.jpg', 
+    video: 'Aleksi.mp4',
     number: null,
-    position: 'Hyökkääjä'
-  },
-  'Matias Virta': { 
-    image: 'Matias.jpg', 
-    video: null,
-    number: 30,
-    position: 'Maalivahti'
-  },
-  'Lassi Liukkonen': { 
-    image: 'default_player.jpg', 
-    video: null,
-    number: 35,
-    position: 'Maalivahti'
-  },
-  'Vesa Kurppa': { 
-    image: 'default_player.jpg', 
-    video: null,
-    number: 99,
-    position: 'Maalivahti'
-  },
-  'Veikka Saarinen': { 
-    image: 'Veikka.jpg', 
-    video: 'Veikka.mp4',
-    number: 14,
-    position: 'Hyökkääjä'
-  },
-  'Vesa Halme': { 
-    image: 'Vesa.jpg', 
-    video: 'Vesa.mp4',
-    number: 55,
-    position: 'Puolustaja'
-  },
-  'Ville Mäenranta': { 
-    image: 'Ville.jpg', 
-    video: 'Ville.mp4',
-    number: 28,
-    position: 'Puolustaja'
-  },
-  'Akseli Nykänen': { 
-    image: 'Akseli.jpg', 
-    video: 'Akseli_gorilla.jpeg',
-    number: 15,
     position: 'Hyökkääjä'
   },
   'Miika Oja-Nisula': { 
@@ -204,44 +150,7 @@ export const PLAYER_MEDIA = {
     video: 'Miika.mp4',
     number: 66,
     position: 'Hyökkääjä'
-  },
-  'Joni Vainio': { 
-    image: 'Joni.jpg', 
-    video: 'Joni.mp4',
-    number: 13,
-    position: 'Hyökkääjä'
-  },
-  'Jimi Laaksonen': { 
-    image: 'Jimi.jpg', 
-    video: null,
-    number: 11,
-    position: 'Hyökkääjä'
-  },
-  'Petri Vikman': { 
-    image: 'Petri.jpg', 
-    video: 'Petri.mp4',
-    number: 22,
-    position: 'Hyökkääjä'
-  },
-  'Henri Kananen': { 
-    image: 'Kananen.jpg', 
-    video: null,
-    number: 27,
-    position: 'Hyökkääjä'
-  },
-  'Juha Kiilunen': { 
-    image: 'Juha.jpg', 
-    video: 'Juha.mp4',
-    number: null,
-    position: null
-  },
-  'Jesse Höykinpuro': { 
-    image: 'Jesse.jpg', 
-    video: null,
-    number: 8,
-    position: 'Hyökkääjä'
   }
-
 };
 
 /**
