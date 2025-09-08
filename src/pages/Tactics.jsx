@@ -22,7 +22,7 @@ export default function Tactics() {
   const [selectedSeason, setSelectedSeason] = useState('');
   const [loading, setLoading] = useState(true);
   const [fields, setFields] = useState([
-    { id: 'field1', name: 'Kenttä 1', players: [], width: 600, height: 300 }
+    { id: 'field1', name: 'Kenttä 1', players: [], width: 1000, height: 800 }
   ]);
   const [availablePlayers, setAvailablePlayers] = useState([]);
   const [draggedPlayer, setDraggedPlayer] = useState(null);
@@ -155,7 +155,7 @@ export default function Tactics() {
   const addField = () => {
     const newId = `field${Date.now()}`;
     const newName = `Kenttä ${fields.length + 1}`;
-    setFields(prev => [...prev, { id: newId, name: newName, players: [], width: 600, height: 300 }]);
+    setFields(prev => [...prev, { id: newId, name: newName, players: [], width: 500, height: 300 }]);
   };
 
   const removeField = (fieldId) => {
@@ -435,7 +435,7 @@ export default function Tactics() {
                 </h3>
               </div>
               
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
                 {availablePlayers.map(player => (
                   <motion.div
                     key={player.id}
@@ -444,16 +444,16 @@ export default function Tactics() {
                     draggable={!isTouchDevice}
                     onDragStart={() => handleDragStart(player)}
                     onTouchStart={() => handleTouchStart(player)}
-                    className={`bg-white/10 border border-white/20 rounded-lg p-3 cursor-pointer transition-all ${
+                    className={`bg-white/10 border border-white/20 rounded-lg p-1.5 cursor-pointer transition-all ${
                       touchedPlayer?.id === player.id 
                         ? 'border-orange-500 bg-white/20' 
                         : 'hover:border-orange-400/50'
                     }`}
                     onClick={() => handlePlayerClick(player)}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5">
                       <div className="relative">
-                        <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-orange-500">
+                        <div className="w-8 h-8 rounded-full overflow-hidden border border-orange-500">
                           <img 
                             src={`/${player.img}`}
                             alt={player.name}
@@ -462,20 +462,20 @@ export default function Tactics() {
                               console.log('Image load error for player:', player.name, 'image path:', player.img);
                               e.target.style.display = 'none';
                               e.target.parentElement.innerHTML = `
-                                <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold text-[10px]">
                                   ${player.number || 'N/A'}
                                 </div>
                               `;
                             }}
                           />
                         </div>
-                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 bg-orange-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center">
                           {player.number}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-white font-semibold truncate">{player.name}</div>
-                        <div className="text-white/60 text-sm flex justify-between">
+                        <div className="text-white font-medium text-xs truncate">{player.name}</div>
+                        <div className="text-white/60 text-[10px] flex justify-between">
                           <span>{player.goals}M / {player.assists}S</span>
                         </div>
                       </div>
@@ -484,9 +484,9 @@ export default function Tactics() {
                           e.stopPropagation();
                           handlePlusClick(player);
                         }}
-                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-1 transition-colors"
+                        className="bg-orange-500 hover:bg-orange-600 text-white rounded-full p-0.5 transition-colors"
                       >
-                        <Plus size={16} />
+                        <Plus size={12} />
                       </button>
                     </div>
                   </motion.div>
@@ -541,7 +541,7 @@ export default function Tactics() {
                   {/* Field Visualization */}
                   <div 
                     className="relative w-full bg-gray-900 rounded-lg border-2 border-dashed border-white/30 overflow-hidden"
-                    style={{ height: field.height - 100 }}
+                    style={{ height: Math.max(200, field.height - 100) }}
                     ref={el => fieldRefs.current[field.id] = el}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, field.id)}
@@ -574,7 +574,7 @@ export default function Tactics() {
                           animate={{ scale: 1 }}
                           className="relative group"
                         >
-                          <div className="w-16 h-16 rounded-full border-3 border-white shadow-lg overflow-hidden">
+                          <div className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden">
                             <img 
                               src={`/${player.player.img}`}
                               alt={player.player.name}
@@ -582,14 +582,14 @@ export default function Tactics() {
                               onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.parentElement.innerHTML = `
-                                  <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                  <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
                                     ${player.player.number}
                                   </div>
                                 `;
                               }}
                             />
                           </div>
-                          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                          <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-1 py-0.5 rounded whitespace-nowrap">
                             {player.player.name.split(' ')[0]}
                           </div>
                           <button
@@ -597,9 +597,9 @@ export default function Tactics() {
                               e.stopPropagation();
                               removePlayerFromField(field.id, player.id);
                             }}
-                            className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            <X size={12} />
+                            <X size={10} />
                           </button>
                         </motion.div>
                       </div>
