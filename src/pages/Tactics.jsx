@@ -34,6 +34,37 @@ export default function Tactics() {
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const [pendingPlayer, setPendingPlayer] = useState(null);
   const fieldRefs = useRef({});
+  const fieldContainerRefs = useRef({});
+
+  // Attach non-passive touchmove listeners to field elements
+  useEffect(() => {
+    const fields = Object.values(fieldRefs.current);
+    const handlers = {};
+
+    fields.forEach((field, index) => {
+      if (!field) return;
+      const fieldId = Object.keys(fieldRefs.current).find(key => fieldRefs.current[key] === field);
+
+      const handleTouchMove = (e) => {
+        if (draggedFieldPlayer && draggedFieldPlayer.fieldId === fieldId) {
+          e.preventDefault();
+        }
+      };
+
+      field.addEventListener('touchmove', handleTouchMove, { passive: false });
+      handlers[fieldId] = handleTouchMove;
+    });
+
+    return () => {
+      fields.forEach((field, index) => {
+        if (!field) return;
+        const fieldId = Object.keys(fieldRefs.current)[index];
+        if (handlers[fieldId]) {
+          field.removeEventListener('touchmove', handlers[fieldId]);
+        }
+      });
+    };
+  }, [draggedFieldPlayer]);
 
   // Detect touch device
   useEffect(() => {
@@ -310,6 +341,7 @@ export default function Tactics() {
   };
 
   const handleFieldTouchStart = (e, fieldId, playerId) => {
+    if (e.cancelable) e.preventDefault();
     const touch = e.touches[0];
     setDraggedFieldPlayer({ fieldId, playerId });
 
@@ -445,8 +477,8 @@ export default function Tactics() {
                     onDragStart={() => handleDragStart(player)}
                     onTouchStart={() => handleTouchStart(player)}
                     className={`bg-white/10 border border-white/20 rounded-lg p-1.5 cursor-pointer transition-all ${touchedPlayer?.id === player.id
-                        ? 'border-orange-500 bg-white/20'
-                        : 'hover:border-orange-400/50'
+                      ? 'border-orange-500 bg-white/20'
+                      : 'hover:border-orange-400/50'
                       }`}
                     onClick={() => handlePlayerClick(player)}
                   >
@@ -548,7 +580,6 @@ export default function Tactics() {
                     onMouseUp={handleFieldMouseUp}
                     onMouseLeave={handleFieldMouseUp}
                     onTouchStart={(e) => handleFieldTouch(e, field.id)}
-                    onTouchMove={(e) => handleFieldTouchMove(e, field.id)}
                     onTouchEnd={handleFieldTouchEnd}
                   >
                     {/* SekTa logo background */}
