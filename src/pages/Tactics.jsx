@@ -33,6 +33,7 @@ export default function Tactics() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [showFieldSelector, setShowFieldSelector] = useState(false);
   const [pendingPlayer, setPendingPlayer] = useState(null);
+  const [activeFieldPlayer, setActiveFieldPlayer] = useState(null);
   const fieldRefs = useRef({});
   const fieldContainerRefs = useRef({});
 
@@ -286,13 +287,17 @@ export default function Tactics() {
 
   const handleFieldTouch = (e, fieldId) => {
     e.preventDefault();
+    const touch = e.changedTouches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((touch.clientX - rect.left) / rect.width) * 100;
+    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+
     if (touchedPlayer) {
-      const touch = e.changedTouches[0];
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((touch.clientX - rect.left) / rect.width) * 100;
-      const y = ((touch.clientY - rect.top) / rect.height) * 100;
       addPlayerToField(fieldId, touchedPlayer, x, y);
       setTouchedPlayer(null);
+    } else if (activeFieldPlayer && activeFieldPlayer.fieldId === fieldId) {
+      updatePlayerPosition(fieldId, activeFieldPlayer.playerId, x, y);
+      setActiveFieldPlayer(null);
     }
   };
 
@@ -341,6 +346,13 @@ export default function Tactics() {
   };
 
   const handleFieldTouchStart = (e, fieldId, playerId) => {
+    e.stopPropagation();
+    if (isTouchDevice) {
+      setActiveFieldPlayer(prev =>
+        (prev?.playerId === playerId) ? null : { fieldId, playerId }
+      );
+    }
+
     if (e.cancelable) e.preventDefault();
     const touch = e.touches[0];
     setDraggedFieldPlayer({ fieldId, playerId });
@@ -602,8 +614,12 @@ export default function Tactics() {
                       >
                         <motion.div
                           initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="relative group"
+                          animate={{
+                            scale: activeFieldPlayer?.playerId === player.id ? 1.2 : 1,
+                            boxShadow: activeFieldPlayer?.playerId === player.id ? '0 0 20px rgba(249, 115, 22, 0.8)' : 'none'
+                          }}
+                          className={`relative group rounded-full ${activeFieldPlayer?.playerId === player.id ? 'ring-4 ring-orange-500 ring-offset-2 ring-offset-gray-900' : ''
+                            }`}
                         >
                           <div className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden">
                             <img
