@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { 
-  Users, 
+import {
+  Users,
   Target,
   Plus,
   Trash2,
@@ -52,23 +52,23 @@ export default function Tactics() {
       console.log('Skipping player filter - no selected season or players');
       return;
     }
-    
+
     console.log('Filtering players for season:', selectedSeason);
     console.log('All players count:', allPlayers.length);
-    
+
     // Get all players for the selected season (including goalies)
     const seasonPlayers = allPlayers
       .filter(player => {
         // Check if player has data for this season
         // Use a more flexible matching approach
-        const seasonData = player.seasons?.find(s => 
+        const seasonData = player.seasons?.find(s =>
           s.season && s.season.trim() === selectedSeason.trim()
         );
         console.log(`Player ${player.name} season data for ${selectedSeason}:`, seasonData);
         return seasonData;
       })
       .map(player => {
-        const seasonData = player.seasons.find(s => 
+        const seasonData = player.seasons.find(s =>
           s.season && s.season.trim() === selectedSeason.trim()
         );
         return {
@@ -82,7 +82,7 @@ export default function Tactics() {
           img: getPlayerImage(player.name)
         };
       });
-    
+
     console.log('Filtered season players count:', seasonPlayers.length);
     console.log('Filtered season players:', seasonPlayers);
     setAvailablePlayers(seasonPlayers);
@@ -93,28 +93,28 @@ export default function Tactics() {
       setLoading(true);
       console.log('Loading player data...');
       const data = await getComprehensivePlayerAndGoalieLists();
-      
+
       console.log('Data received:', data);
       console.log('Seasons:', data?.seasons);
       console.log('Players:', data?.players?.length);
       console.log('Goalies:', data?.goalies?.length);
-      
+
       if (data && (data.players.length > 0 || data.goalies.length > 0)) {
         // Get the list of goalie names to avoid duplicates
         const goalieNames = data.goalies.map(goalie => goalie.name);
         console.log('Goalie names:', goalieNames);
-        
+
         // Filter out goalies from the players list to avoid duplicates
-        const filteredPlayers = data.players.filter(player => 
+        const filteredPlayers = data.players.filter(player =>
           !goalieNames.includes(player.name)
         );
         console.log('Filtered players (without goalies):', filteredPlayers.length);
-        
+
         // Combine players and goalies
         const allPlayers = [...filteredPlayers, ...data.goalies];
         console.log('Combined players:', allPlayers.length);
         setAllPlayers(allPlayers);
-        
+
         // Log all unique seasons from players
         const playerSeasons = new Set();
         allPlayers.forEach(player => {
@@ -125,9 +125,9 @@ export default function Tactics() {
           });
         });
         console.log('Unique seasons from all players:', Array.from(playerSeasons));
-        
+
         setAvailableSeasons(data.seasons || ['2024-2025', '2023-2024']);
-        
+
         // Set the selected season to the first (latest) season if available
         if (data.seasons && data.seasons.length > 0) {
           console.log('Setting selected season to:', data.seasons[0]);
@@ -164,7 +164,7 @@ export default function Tactics() {
   };
 
   const updateFieldName = (fieldId, newName) => {
-    setFields(prev => prev.map(f => 
+    setFields(prev => prev.map(f =>
       f.id === fieldId ? { ...f, name: newName } : f
     ));
   };
@@ -277,7 +277,7 @@ export default function Tactics() {
   const handleFieldMouseDown = (e, fieldId, playerId) => {
     e.preventDefault();
     setDraggedFieldPlayer({ fieldId, playerId });
-    
+
     const rect = e.currentTarget.parentElement.getBoundingClientRect();
     const player = fields.find(f => f.id === fieldId)?.players.find(p => p.id === playerId);
     if (player) {
@@ -290,18 +290,18 @@ export default function Tactics() {
 
   const handleFieldMouseMove = (e, fieldId) => {
     if (!draggedFieldPlayer) return;
-    
+
     const { fieldId: dragFieldId, playerId } = draggedFieldPlayer;
     if (dragFieldId !== fieldId) return;
-    
+
     const fieldRect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - fieldRect.left - dragOffset.x) / fieldRect.width) * 100;
     const y = ((e.clientY - fieldRect.top - dragOffset.y) / fieldRect.height) * 100;
-    
+
     // Keep player within field boundaries
     const boundedX = Math.max(0, Math.min(100, x));
     const boundedY = Math.max(0, Math.min(100, y));
-    
+
     updatePlayerPosition(fieldId, playerId, boundedX, boundedY);
   };
 
@@ -312,7 +312,7 @@ export default function Tactics() {
   const handleFieldTouchStart = (e, fieldId, playerId) => {
     const touch = e.touches[0];
     setDraggedFieldPlayer({ fieldId, playerId });
-    
+
     const rect = e.currentTarget.parentElement.getBoundingClientRect();
     const player = fields.find(f => f.id === fieldId)?.players.find(p => p.id === playerId);
     if (player) {
@@ -325,20 +325,20 @@ export default function Tactics() {
 
   const handleFieldTouchMove = (e, fieldId) => {
     if (!draggedFieldPlayer) return;
-    
+
     const { fieldId: dragFieldId, playerId } = draggedFieldPlayer;
     if (dragFieldId !== fieldId) return;
-    
+
     e.preventDefault();
     const touch = e.touches[0];
     const fieldRect = e.currentTarget.getBoundingClientRect();
     const x = ((touch.clientX - fieldRect.left - dragOffset.x) / fieldRect.width) * 100;
     const y = ((touch.clientY - fieldRect.top - dragOffset.y) / fieldRect.height) * 100;
-    
+
     // Keep player within field boundaries
     const boundedX = Math.max(0, Math.min(100, x));
     const boundedY = Math.max(0, Math.min(100, y));
-    
+
     updatePlayerPosition(fieldId, playerId, boundedX, boundedY);
   };
 
@@ -372,23 +372,23 @@ export default function Tactics() {
     e.preventDefault();
     const field = fields.find(f => f.id === fieldId);
     if (!field) return;
-    
+
     const startX = e.clientX;
     const startY = e.clientY;
     const startWidth = field.width;
     const startHeight = field.height;
-    
+
     const doDrag = (e) => {
       const newWidth = Math.max(300, startWidth + (e.clientX - startX));
       const newHeight = Math.max(200, startHeight + (e.clientY - startY));
       updateFieldSize(fieldId, newWidth, newHeight);
     };
-    
+
     const stopDrag = () => {
       document.removeEventListener('mousemove', doDrag);
       document.removeEventListener('mouseup', stopDrag);
     };
-    
+
     document.addEventListener('mousemove', doDrag);
     document.addEventListener('mouseup', stopDrag);
   };
@@ -434,7 +434,7 @@ export default function Tactics() {
                   Pelaajat ({availablePlayers.length})
                 </h3>
               </div>
-              
+
               <div className="space-y-1.5 max-h-[600px] overflow-y-auto">
                 {availablePlayers.map(player => (
                   <motion.div
@@ -444,17 +444,16 @@ export default function Tactics() {
                     draggable={!isTouchDevice}
                     onDragStart={() => handleDragStart(player)}
                     onTouchStart={() => handleTouchStart(player)}
-                    className={`bg-white/10 border border-white/20 rounded-lg p-1.5 cursor-pointer transition-all ${
-                      touchedPlayer?.id === player.id 
-                        ? 'border-orange-500 bg-white/20' 
+                    className={`bg-white/10 border border-white/20 rounded-lg p-1.5 cursor-pointer transition-all ${touchedPlayer?.id === player.id
+                        ? 'border-orange-500 bg-white/20'
                         : 'hover:border-orange-400/50'
-                    }`}
+                      }`}
                     onClick={() => handlePlayerClick(player)}
                   >
                     <div className="flex items-center gap-1.5">
                       <div className="relative">
                         <div className="w-8 h-8 rounded-full overflow-hidden border border-orange-500">
-                          <img 
+                          <img
                             src={`/${player.img}`}
                             alt={player.name}
                             className="w-full h-full object-cover"
@@ -504,7 +503,7 @@ export default function Tactics() {
           <div className="lg:col-span-3 space-y-6">
             {fields.map((field, index) => (
               <Reveal key={field.id} delay={0.3 + index * 0.1}>
-                <div 
+                <div
                   className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 relative mb-2"
                   style={{ width: field.width }}
                 >
@@ -537,10 +536,10 @@ export default function Tactics() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Field Visualization */}
-                  <div 
-                    className="relative w-full bg-gray-900 rounded-lg border-2 border-dashed border-white/30 overflow-hidden"
+                  <div
+                    className="relative w-full bg-gray-900 rounded-lg border-2 border-dashed border-white/30 overflow-hidden touch-none"
                     style={{ height: Math.max(200, field.height - 100) }}
                     ref={el => fieldRefs.current[field.id] = el}
                     onDragOver={handleDragOver}
@@ -556,15 +555,16 @@ export default function Tactics() {
                     <div className="absolute inset-0 opacity-5 flex items-center justify-center">
                       <div className="text-white text-6xl font-bold">SEKTA</div>
                     </div>
-                    
+
                     {/* Player positions */}
                     {field.players.map((player) => (
                       <div
                         key={player.id}
                         className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move"
-                        style={{ 
-                          left: `${player.x}%`, 
-                          top: `${player.y}%` 
+                        style={{
+                          left: `${player.x}%`,
+                          top: `${player.y}%`,
+                          touchAction: 'none'
                         }}
                         onMouseDown={(e) => handleFieldMouseDown(e, field.id, player.id)}
                         onTouchStart={(e) => handleFieldTouchStart(e, field.id, player.id)}
@@ -575,7 +575,7 @@ export default function Tactics() {
                           className="relative group"
                         >
                           <div className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden">
-                            <img 
+                            <img
                               src={`/${player.player.img}`}
                               alt={player.player.name}
                               className="w-full h-full object-cover"
@@ -604,7 +604,7 @@ export default function Tactics() {
                         </motion.div>
                       </div>
                     ))}
-                    
+
                     {/* Resize handle */}
                     <div
                       className="absolute bottom-0 right-0 w-6 h-6 bg-orange-500 cursor-se-resize rounded-tl-lg"
@@ -615,7 +615,7 @@ export default function Tactics() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4 text-sm text-white/60">
                     {isTouchDevice ? (
                       <p>📱 Kosketa pelaajaa ja sitten kenttää asettaaksesi pelaajan</p>
@@ -626,7 +626,7 @@ export default function Tactics() {
                 </div>
               </Reveal>
             ))}
-            
+
             {/* Add Field Button */}
             <Reveal delay={0.5}>
               <button
@@ -668,10 +668,10 @@ export default function Tactics() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="flex items-center gap-4 mb-6">
               <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-orange-500">
-                <img 
+                <img
                   src={`/${selectedPlayer.img}`}
                   alt={selectedPlayer.name}
                   className="w-full h-full object-cover"
@@ -690,7 +690,7 @@ export default function Tactics() {
                 <div className="text-orange-400 font-bold mt-1">{selectedPlayer.goals} maalia / {selectedPlayer.assists} syöttöä</div>
               </div>
             </div>
-            
+
             <div className="flex justify-end">
               <button
                 onClick={closePlayerModal}
@@ -728,11 +728,11 @@ export default function Tactics() {
                 <X size={24} />
               </button>
             </div>
-            
+
             <p className="text-white/80 mb-4">
               Valitse kenttä jolle pelaaja {pendingPlayer?.name} lisätään:
             </p>
-            
+
             <div className="space-y-3">
               {fields.map(field => (
                 <button
