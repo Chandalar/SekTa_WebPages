@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { BarChart3, Users, Target, Calendar } from "lucide-react";
+import { BarChart3, Users, Target, Calendar, Trophy, ChevronDown } from "lucide-react";
+import StandingsTable from "../components/StandingsTable";
+import Reveal from "../components/Reveal";
 
 export default function Home() {
   const [showMonthly, setShowMonthly] = useState(false);
@@ -29,26 +31,33 @@ export default function Home() {
             Tervetuloa SekTa Salibandyn kotisivuille
           </motion.h1>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
-            className="flex flex-col items-center gap-10 mt-auto">
+            className="flex flex-col items-center gap-6 mt-auto">
             <div className="flex flex-wrap gap-4 justify-center">
               <Link
                 to="/team"
                 className="px-8 py-4 bg-orange-500 hover:bg-orange-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
                 <Users size={20} />
-                Tutustu joukkueeseen
+                Joukkue
               </Link>
               <Link
                 to="/statistics"
                 className="px-8 py-4 bg-purple-500 hover:bg-purple-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
                 <BarChart3 size={20} />
-                Katso tilastot
+                Tilastot
               </Link>
+              <button
+                onClick={() => document.getElementById('sarjataulukko').scrollIntoView({ behavior: 'smooth' })}
+                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2 text-white"
+              >
+                <Trophy size={20} />
+                Sarjataulukko
+              </button>
               <Link
                 to="/tactics"
                 className="px-8 py-4 bg-green-500 hover:bg-green-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
@@ -56,17 +65,54 @@ export default function Home() {
                 <Target size={20} />
                 Kokoonpanot
               </Link>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 text-white/40 animate-bounce mt-8">
+              <span className="text-xs uppercase tracking-widest font-bold">Selaa alas</span>
+              <ChevronDown size={20} />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* SARJATAULUKKO SECTION */}
+      <section id="sarjataulukko" className="py-24 px-4 relative">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Sarjataulukko</h2>
+              <p className="text-white/60">Seuraa SekTan etenemistä 3. divisioonassa</p>
+            </div>
+            <StandingsTable />
+          </Reveal>
+        </div>
+      </section>
+
+      {/* CALENDAR SECTION */}
+      <section className="py-24 px-4 relative bg-black/20">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-black text-white mb-4 uppercase tracking-tighter">Tapahtumakalenteri</h2>
+              <p className="text-white/60">Tulevat pelit ja harjoitukset Nimenhuudossa</p>
+            </div>
+
+            <div className="flex justify-center mb-8">
               <button
                 onClick={() => setShowMonthly((v) => !v)}
-                className="px-5 py-2 bg-blue-500 hover:bg-blue-600 rounded-full text-sm font-semibold shadow-lg transition flex items-center gap-2"
+                className="px-8 py-3 bg-white/10 hover:bg-white/20 rounded-full text-sm font-bold shadow-lg transition flex items-center gap-2 backdrop-blur-md border border-white/10"
               >
-                <Calendar size={16} />
+                <Calendar size={18} className="text-blue-400" />
                 {showMonthly ? "Piilota kalenteri" : "Näytä kalenteri"}
               </button>
             </div>
 
             {showMonthly && (
-              <div className="w-full max-w-3xl rounded-xl overflow-hidden border border-white/10 bg-white mb-10">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="w-full rounded-2xl overflow-hidden border border-white/10 bg-white shadow-2xl"
+              >
                 {/* NIMENHUUTO.COM KUUKAUSIKALENTERI */}
                 <div style={{ textAlign: "center", backgroundColor: "#fff", border: 0, padding: 0, margin: 0, color: "#000" }}>
                   <span style={{ float: "right" }}>
@@ -110,11 +156,11 @@ export default function Home() {
                   />
                 </div>
                 {/* /NIMENHUUTO.COM KUUKAUSIKALENTERI */}
-              </div>
+              </motion.div>
             )}
-          </motion.div>
+          </Reveal>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

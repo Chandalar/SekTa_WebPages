@@ -1,29 +1,31 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingUp, 
-  Users, 
-  BarChart3, 
+import {
+  TrendingUp,
+  Users,
+  BarChart3,
   Shield,
   Calendar,
   History,
   Filter,
   ArrowUpDown,
   Eye,
-  Target
+  Target,
+  Trophy
 } from 'lucide-react';
-import { 
-  AnimatedBarChart, 
-  AnimatedPieChart, 
-  AnimatedLineChart, 
+import StandingsTable from '../components/StandingsTable';
+import {
+  AnimatedBarChart,
+  AnimatedPieChart,
+  AnimatedLineChart,
   AnimatedAreaChart,
   AnimatedStackedBarChart,
   PlayerRadarChart,
-  StatsCard 
+  StatsCard
 } from '../components/Charts';
-import { 
-  getAllStats, 
-  getStatsBySeason, 
+import {
+  getAllStats,
+  getStatsBySeason,
   getAvailableSeasons,
   getSeasonPlayerStats,
   getPlayerStatsFromMainSheet,
@@ -52,7 +54,7 @@ export default function Statistics() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [positionFilter, setPositionFilter] = useState('all');
   const [seasonComparison, setSeasonComparison] = useState(null);
-  
+
   // Goalie-specific state
   const [goalieStats, setGoalieStats] = useState([]);
   const [goalieSortBy, setGoalieSortBy] = useState('savePercentage');
@@ -87,21 +89,21 @@ export default function Statistics() {
     try {
       console.log('🔄 Loading data from CSV (Pelaajat - Tilastot)...');
       const data = await getPlayerStatsFromCSV();
-      
+
       if (data && data.seasons) {
         setAvailableSeasons(data.seasons);
         const latestSeason = data.seasons[0];
         setSelectedSeason(latestSeason);
         setCurrentSeasonIndex(0);
-        
+
         // Filter players for the latest season initially
         const seasonPlayers = await getPlayersForSeason(latestSeason, data.players);
         setPlayerStats(seasonPlayers);
-        
+
         // Filter goalies for the latest season
         const seasonGoalies = await getGoaliesForSeason(latestSeason, data.players);
         setGoalieStats(seasonGoalies);
-        
+
         // Calculate team stats for the current season
         const teamStats = {
           totalGoals: seasonPlayers.reduce((sum, p) => sum + p.goals, 0),
@@ -112,20 +114,20 @@ export default function Statistics() {
           season: latestSeason
         };
         setTeamStats(teamStats);
-        
+
         console.log(`✅ Loaded ${seasonPlayers.length} players from CSV for season ${latestSeason}`);
       }
     } catch (error) {
       console.error('Error loading CSV seasons:', error);
     }
   };
-  
+
   const getPlayersForSeason = async (targetSeason, allPlayers = null) => {
     if (!allPlayers) {
       const data = await getPlayerStatsFromCSV();
       allPlayers = data?.players || [];
     }
-    
+
     // Filter players who have data for the target season and are NOT goalies
     return allPlayers.map(player => {
       const seasonData = player.seasons?.find(s => s.season === targetSeason);
@@ -143,13 +145,13 @@ export default function Statistics() {
       return null;
     }).filter(Boolean);
   };
-  
+
   const getGoaliesForSeason = async (targetSeason, allPlayers = null) => {
     if (!allPlayers) {
       const data = await getPlayerStatsFromCSV();
       allPlayers = data?.players || [];
     }
-    
+
     // Filter players who have data for the target season and ARE goalies
     return allPlayers.map(player => {
       const seasonData = player.seasons?.find(s => s.season === targetSeason);
@@ -169,22 +171,22 @@ export default function Statistics() {
       return null;
     }).filter(Boolean);
   };
-  
+
   const handleSeasonChange = async (seasonIndex) => {
     const newSeason = availableSeasons[seasonIndex];
     setCurrentSeasonIndex(seasonIndex);
     setSelectedSeason(newSeason);
-    
+
     console.log(`🔄 Statistics: Changing to season: ${newSeason}`);
-    
+
     // Load players for the selected season
     const seasonPlayers = await getPlayersForSeason(newSeason);
     setPlayerStats(seasonPlayers);
-    
+
     // Load goalies for the selected season
     const seasonGoalies = await getGoaliesForSeason(newSeason);
     setGoalieStats(seasonGoalies);
-    
+
     // Update team stats
     const teamStats = {
       totalGoals: seasonPlayers.reduce((sum, p) => sum + p.goals, 0),
@@ -195,7 +197,7 @@ export default function Statistics() {
       season: newSeason
     };
     setTeamStats(teamStats);
-    
+
     console.log(`✅ Statistics: Loaded ${seasonPlayers.length} players for season ${newSeason}`);
   };
 
@@ -213,14 +215,14 @@ export default function Statistics() {
   const loadSeasonData = async (season) => {
     try {
       setLoading(true);
-      
+
       // Use season-specific CSV data
       const data = await getPlayerStatsForSeason(season);
-      
+
       if (data && data.players.length > 0) {
         console.log(`📅 Using CSV data for season ${season}`);
         setPlayerStats(data.players);
-        
+
         const teamStats = {
           totalGoals: data.players.reduce((sum, p) => sum + p.goals, 0),
           totalAssists: data.players.reduce((sum, p) => sum + p.assists, 0),
@@ -241,21 +243,21 @@ export default function Statistics() {
   const loadPlayerHistory = async (playerName) => {
     try {
       setLoading(true);
-      
+
       // Get player data across all available seasons
       const playerHistory = {
         name: playerName,
         seasons: [],
         careerStats: { totalGoals: 0, totalAssists: 0, totalPoints: 0, totalGames: 0 }
       };
-      
+
       for (const season of availableSeasons) {
         const seasonData = await getSeasonPlayerStats(season);
         if (seasonData) {
-          const player = seasonData.players.find(p => 
+          const player = seasonData.players.find(p =>
             p.name.toLowerCase().includes(playerName.toLowerCase())
           );
-          
+
           if (player) {
             playerHistory.seasons.push(player);
             playerHistory.careerStats.totalGoals += player.goals;
@@ -265,7 +267,7 @@ export default function Statistics() {
           }
         }
       }
-      
+
       setSelectedPlayer(playerHistory);
     } catch (error) {
       console.error('Error loading player history:', error);
@@ -285,15 +287,15 @@ export default function Statistics() {
     console.log('Testing getPlayerStatsFromMainSheet...');
     const data = await getPlayerStatsFromMainSheet();
     console.log('Main sheet data:', data);
-    
+
     // Also run the new debug function
     console.log('Running detailed Excel debug...');
     const debugResult = await debugExcelData();
     console.log('Debug result:', debugResult);
-    
+
     // Look for Mika specifically
     if (data && data.players) {
-      const mika = data.players.find(p => 
+      const mika = data.players.find(p =>
         p.name.toLowerCase().includes('mika')
       );
       console.log('Found Mika in main sheet:', mika);
@@ -310,7 +312,7 @@ export default function Statistics() {
       const bValue = b[sortBy] || 0;
       return sortOrder === 'desc' ? bValue - aValue : aValue - bValue;
     });
-    
+
   const filteredGoalies = goalieStats
     .sort((a, b) => {
       const aValue = a[goalieSortBy] || 0;
@@ -326,7 +328,7 @@ export default function Statistics() {
       setSortOrder('desc');
     }
   };
-  
+
   const handleGoalieSort = (field) => {
     if (goalieSortBy === field) {
       setGoalieSortOrder(goalieSortOrder === 'desc' ? 'asc' : 'desc');
@@ -343,7 +345,8 @@ export default function Statistics() {
     { id: 'team', label: 'Joukkue', icon: Shield },
     { id: 'history', label: 'Historia', icon: History },
     { id: 'comparison', label: 'Vertailu', icon: TrendingUp },
-    { id: 'detailed', label: 'Yksityiskohtaiset Tilastot', icon: Eye }
+    { id: 'detailed', label: 'Yksityiskohtaiset Tilastot', icon: Eye },
+    { id: 'sarjataulukko', label: 'Sarjataulukko', icon: Trophy }
   ];
 
   if (loading) {
@@ -371,7 +374,7 @@ export default function Statistics() {
                   SekTa Tilastot
                 </h1>
               </div>
-              
+
               {/* Current Season Display */}
               <div className="mb-4">
                 <div className="text-2xl font-bold text-orange-400">
@@ -381,17 +384,17 @@ export default function Statistics() {
                   {currentSeasonIndex + 1} / {availableSeasons.length} kautta
                 </div>
               </div>
-              
+
               {/* Season Slider */}
               <div className="flex items-center justify-center gap-6 max-w-2xl mx-auto">
-                <button 
+                <button
                   onClick={() => handleSeasonChange(0)}
                   className="text-white/70 hover:text-white font-semibold transition-colors"
                   disabled={currentSeasonIndex === 0}
                 >
                   Uusin
                 </button>
-                
+
                 <div className="flex-1 relative">
                   <input
                     type="range"
@@ -425,23 +428,22 @@ export default function Statistics() {
                       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
                     }
                   `}</style>
-                  
+
                   {/* Season markers */}
                   <div className="absolute -bottom-8 left-0 right-0">
                     <div className="flex justify-between text-xs text-white/50 px-3">
-                      {availableSeasons.filter((_, index) => 
-                        index === 0 || 
-                        index === availableSeasons.length - 1 || 
+                      {availableSeasons.filter((_, index) =>
+                        index === 0 ||
+                        index === availableSeasons.length - 1 ||
                         index % Math.max(1, Math.floor(availableSeasons.length / 4)) === 0
                       ).map((season, displayIndex) => {
                         const actualIndex = availableSeasons.indexOf(season);
                         return (
-                          <div 
-                            key={season} 
-                            className={`transition-colors text-center ${
-                              actualIndex === currentSeasonIndex ? 'text-orange-400 font-bold' : ''
-                            }`}
-                            style={{ 
+                          <div
+                            key={season}
+                            className={`transition-colors text-center ${actualIndex === currentSeasonIndex ? 'text-orange-400 font-bold' : ''
+                              }`}
+                            style={{
                               position: 'absolute',
                               left: `${(actualIndex / Math.max(1, availableSeasons.length - 1)) * 100}%`,
                               transform: 'translateX(-50%)'
@@ -461,8 +463,8 @@ export default function Statistics() {
                     </div>
                   </div>
                 </div>
-                
-                <button 
+
+                <button
                   onClick={() => handleSeasonChange(availableSeasons.length - 1)}
                   className="text-white/70 hover:text-white font-semibold transition-colors"
                   disabled={currentSeasonIndex === availableSeasons.length - 1}
@@ -471,12 +473,12 @@ export default function Statistics() {
                 </button>
               </div>
             </div>
-            
+
             <p className="text-xl text-white/70 mt-12">
               Kattavat tilastot ja analytiikka - {playerStats.length} pelaajaa, {goalieStats.length} maalivahti
             </p>
             <div className="mt-6 flex justify-center gap-4 flex-wrap">
-              <button 
+              <button
                 onClick={async () => {
                   console.log('Creating test CSV with correct stats...');
                   const result = createTestCSV();
@@ -490,7 +492,7 @@ export default function Statistics() {
               >
                 🧪 Create Test CSV (Correct Stats)
               </button>
-              <button 
+              <button
                 onClick={async () => {
                   console.log('Creating CSV from Excel...');
                   const result = await createCSVFromExcel();
@@ -506,13 +508,13 @@ export default function Statistics() {
               >
                 📄 Create CSV from Excel
               </button>
-              <button 
+              <button
                 onClick={async () => {
                   console.log('Loading from CSV...');
                   const data = await getPlayerStatsFromCSV();
                   console.log('CSV data:', data);
                   if (data && data.players) {
-                    const mika = data.players.find(p => 
+                    const mika = data.players.find(p =>
                       p.name.toLowerCase().includes('mika')
                     );
                     console.log('Found Mika in CSV:', mika);
@@ -522,13 +524,13 @@ export default function Statistics() {
               >
                 🔍 Debug CSV Data
               </button>
-              <button 
+              <button
                 onClick={debugExcel}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm"
               >
                 🐛 Debug Excel Data
               </button>
-              <button 
+              <button
                 onClick={loadAvailableSeasons}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
               >
@@ -574,11 +576,10 @@ export default function Statistics() {
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all ${
-                  selectedTab === tab.id
+                className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all ${selectedTab === tab.id
                     ? 'bg-orange-500 text-white shadow-lg'
                     : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
-                }`}
+                  }`}
               >
                 <tab.icon size={20} />
                 {tab.label}
@@ -676,7 +677,7 @@ export default function Statistics() {
                     <option value="maali">Maalivahdit</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <ArrowUpDown className="text-white/70" size={20} />
                   <select
@@ -692,7 +693,7 @@ export default function Statistics() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="text-white/60 text-sm">
                 Naytetaan {filteredPlayers.length} kenttapelaajaa kaudelta {selectedSeason}
               </div>
@@ -794,7 +795,7 @@ export default function Statistics() {
                   </select>
                 </div>
               </div>
-              
+
               <div className="text-white/60 text-sm">
                 Näytetään {filteredGoalies.length} maalivahti kaudelta {selectedSeason}
               </div>
@@ -886,6 +887,16 @@ export default function Statistics() {
                 </table>
               </div>
             </div>
+          </motion.div>
+        )}
+
+        {selectedTab === 'sarjataulukko' && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-4xl mx-auto"
+          >
+            <StandingsTable />
           </motion.div>
         )}
 
@@ -1115,9 +1126,9 @@ export default function Statistics() {
               <AnimatedBarChart
                 data={goalieStats
                   .sort((a, b) => (b.savePercentage || 0) - (a.savePercentage || 0))
-                  .map(p => ({ 
-                    name: p.name?.split(' ')[0] || 'Unknown', 
-                    torjuntaprosentti: p.savePercentage || 0 
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    torjuntaprosentti: p.savePercentage || 0
                   }))}
                 title={`Maalivahtien Torjuntaprosentit - ${selectedSeason}`}
                 xKey="name"
@@ -1130,9 +1141,9 @@ export default function Statistics() {
               <AnimatedBarChart
                 data={goalieStats
                   .sort((a, b) => (a.goalsAgainstAverage || 0) - (b.goalsAgainstAverage || 0))
-                  .map(p => ({ 
-                    name: p.name?.split(' ')[0] || 'Unknown', 
-                    pmo: p.goalsAgainstAverage || 0 
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    pmo: p.goalsAgainstAverage || 0
                   }))}
                 title={`Maalivahtien Päästetyt Maalit Ottelua Kohden - ${selectedSeason}`}
                 xKey="name"
@@ -1163,9 +1174,9 @@ export default function Statistics() {
                   .sort((a, b) => (b.penalties || 0) - (a.penalties || 0))
                   .filter(p => (p.penalties || 0) > 0)
                   .slice(0, 15)
-                  .map(p => ({ 
-                    name: p.name?.split(' ')[0] || 'Unknown', 
-                    rangaistukset: (p.penalties || 0) * 2 
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    rangaistukset: (p.penalties || 0) * 2
                   }))}
                 title={`Jäähyminuutit - ${selectedSeason}`}
                 xKey="name"
@@ -1183,9 +1194,9 @@ export default function Statistics() {
                   .filter(p => (p.games || 0) > 0)
                   .sort((a, b) => ((b.points || 0) / (b.games || 1)) - ((a.points || 0) / (a.games || 1)))
                   .slice(0, 15)
-                  .map(p => ({ 
-                    name: p.name?.split(' ')[0] || 'Unknown', 
-                    pisteetPerPeli: (p.games ? (p.points || 0) / p.games : 0).toFixed(2) 
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    pisteetPerPeli: (p.games ? (p.points || 0) / p.games : 0).toFixed(2)
                   }))}
                 title={`Pisteitä Per Ottelu - ${selectedSeason}`}
                 xKey="name"
@@ -1199,9 +1210,9 @@ export default function Statistics() {
                 data={goalieStats
                   .filter(g => (g.games || 0) > 0)
                   .sort((a, b) => ((b.wins || 0) / (b.games || 1)) - ((a.wins || 0) / (a.games || 1)))
-                  .map(g => ({ 
-                    name: g.name?.split(' ')[0] || 'Unknown', 
-                    voittoprosentti: (g.games ? (g.wins || 0) / g.games * 100 : 0).toFixed(1) 
+                  .map(g => ({
+                    name: g.name?.split(' ')[0] || 'Unknown',
+                    voittoprosentti: (g.games ? (g.wins || 0) / g.games * 100 : 0).toFixed(1)
                   }))}
                 title={`Maalivahtien Voittoprosentti - ${selectedSeason}`}
                 xKey="name"
@@ -1258,21 +1269,21 @@ export default function Statistics() {
                 valueKey="value"
                 height={350}
               />
-              
+
               {/* Goals by position - Pie chart */}
               <AnimatedPieChart
                 data={[
-                  { 
-                    name: 'Hyökkääjät', 
+                  {
+                    name: 'Hyökkääjät',
                     value: playerStats
                       .filter(p => p.position?.toLowerCase().includes('hyökk'))
-                      .reduce((sum, p) => sum + (p.goals || 0), 0) 
+                      .reduce((sum, p) => sum + (p.goals || 0), 0)
                   },
-                  { 
-                    name: 'Puolustajat', 
+                  {
+                    name: 'Puolustajat',
                     value: playerStats
                       .filter(p => p.position?.toLowerCase().includes('puol'))
-                      .reduce((sum, p) => sum + (p.goals || 0), 0) 
+                      .reduce((sum, p) => sum + (p.goals || 0), 0)
                   }
                 ]}
                 title={`Maalit Pelipaikan Mukaan - ${selectedSeason}`}
@@ -1280,15 +1291,15 @@ export default function Statistics() {
                 valueKey="value"
                 height={350}
               />
-              
+
               {/* Games distribution - Pie chart */}
               <AnimatedPieChart
                 data={playerStats
                   .sort((a, b) => (b.games || 0) - (a.games || 0))
                   .slice(0, 8)
-                  .map(p => ({ 
-                    name: p.name?.split(' ')[0] || 'Unknown', 
-                    value: p.games || 0 
+                  .map(p => ({
+                    name: p.name?.split(' ')[0] || 'Unknown',
+                    value: p.games || 0
                   }))}
                 title={`Pelatut Ottelut (Top 8) - ${selectedSeason}`}
                 nameKey="name"
