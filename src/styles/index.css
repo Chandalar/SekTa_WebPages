@@ -107,3 +107,52 @@ body {
 .fixed-nav-spacer {
   height: 64px; /* Should match navbar height */
 }
+
+/* Floorball court surfaces */
+.court-wood {
+  background: radial-gradient(circle at 50% 50%, #d89753 0%, #a86c32 100%),
+              repeating-linear-gradient(0deg, transparent, transparent 18px, rgba(0,0,0,0.06) 18px, rgba(0,0,0,0.06) 20px);
+}
+
+.court-blue {
+  background: radial-gradient(circle at 50% 50%, #1e5ba8 0%, #0e3770 100%);
+}
+
+.court-neon {
+  background: radial-gradient(circle at 50% 50%, #1a103c 0%, #0a0618 100%);
+}
+
+.court-classic {
+  background-color: #111827;
+}
+
+/* Pro trading card shine & 3D tilt */
+@keyframes card-shine-sweep {
+  0% { transform: translateX(-150%) rotate(25deg); }
+  100% { transform: translateX(250%) rotate(25deg); }
+}
+
+.card-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.12) 35%,
+    rgba(242, 162, 74, 0.25) 48%,
+    rgba(107, 91, 215, 0.25) 52%,
+    transparent 65%
+  );
+  transform: translateX(-150%) rotate(25deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.group:hover .card-shine {
+  opacity: 1;
+  animation: card-shine-sweep 1.2s ease-in-out infinite;
+}

@@ -4,95 +4,70 @@ import { useState } from "react";
 import { BarChart3, Users, Target, Calendar, Trophy, ChevronDown } from "lucide-react";
 import StandingsTable from "../components/StandingsTable";
 import Reveal from "../components/Reveal";
-import HeroScene from "../components/HeroScene";
-import MatchDayCard from "../components/MatchDayCard";
 
 export default function Home() {
   const [showMonthly, setShowMonthly] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white overflow-x-hidden pt-16 relative">
-      {/* Dynamic Arena Radial Lighting */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-b from-[#6b5bd7]/25 via-[#f2a24a]/15 to-transparent blur-3xl pointer-events-none rounded-full -z-0" />
-
-      {/* HERO SECTION with centered logo & 3D ball */}
-      <div className="relative z-10 min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center text-center px-4 py-8">
-        <div className="flex flex-col items-center max-w-4xl w-full">
-          {/* Logo paired with 3D floorball */}
-          <div className="relative flex items-center justify-center mb-6">
-            <motion.img
-              src="/SekTa_LOGO_ilman_tausta.png"
-              alt="SekTa Logo"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="w-36 sm:w-44 lg:w-52 drop-shadow-2xl relative z-10"
-            />
-            <div className="absolute -right-14 -top-6 sm:-right-20 sm:-top-8 opacity-85 z-0">
-              <HeroScene className="w-32 h-32 sm:w-44 sm:h-44" />
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white overflow-x-hidden pt-16">
+      {/* HERO SECTION with centered logo */}
+      <div className="relative z-10 min-h-[calc(100vh-4rem)] flex flex-col justify-center items-center text-center">
+        <div className="flex flex-col items-center">
+          <motion.img
+            src="/SekTa_LOGO_ilman_tausta.png"
+            alt="SekTa Logo"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="w-40 sm:w-48 lg:w-56 mb-8 drop-shadow-2xl"
+          />
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" }}
-            className="text-3xl sm:text-5xl font-black drop-shadow-2xl mb-4 tracking-tight uppercase"
+            className="text-3xl sm:text-5xl font-extrabold drop-shadow-xl mb-20"
           >
-            Tervetuloa <span className="bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">SekTa Salibandyn</span> kotisivuille
+            Tervetuloa SekTa Salibandyn kotisivuille
           </motion.h1>
-
-          <p className="text-sm sm:text-base text-[#b7b3d9] max-w-xl mx-auto mb-2">
-            Sekalainen Sakki — intohimoa, vauhtia ja yhteishenkeä salibandykentillä
-          </p>
-
-          {/* Match Day Next Game Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.7 }}
-            className="w-full"
-          >
-            <MatchDayCard />
-          </motion.div>
 
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="flex flex-col items-center gap-6 mt-4 w-full">
-            <div className="flex flex-wrap gap-3.5 justify-center">
+            transition={{ delay: 0.4, duration: 0.8 }}
+            className="flex flex-col items-center gap-6 mt-auto">
+            <div className="flex flex-wrap gap-4 justify-center">
               <Link
                 to="/team"
-                className="px-6 sm:px-7 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-full text-base font-bold shadow-lg shadow-orange-500/25 transition-all hover:scale-105 flex items-center gap-2 text-white"
+                className="px-8 py-4 bg-orange-500 hover:bg-orange-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
-                <Users size={18} />
+                <Users size={20} />
                 Joukkue
               </Link>
               <Link
                 to="/statistics"
-                className="px-6 sm:px-7 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-full text-base font-bold shadow-lg shadow-purple-600/25 transition-all hover:scale-105 flex items-center gap-2 text-white"
+                className="px-8 py-4 bg-purple-500 hover:bg-purple-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
-                <BarChart3 size={18} />
+                <BarChart3 size={20} />
                 Tilastot
               </Link>
               <button
                 onClick={() => document.getElementById('sarjataulukko').scrollIntoView({ behavior: 'smooth' })}
-                className="px-6 sm:px-7 py-3.5 bg-blue-600 hover:bg-blue-700 rounded-full text-base font-bold shadow-lg shadow-blue-600/25 transition-all hover:scale-105 flex items-center gap-2 text-white"
+                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2 text-white"
               >
-                <Trophy size={18} />
+                <Trophy size={20} />
                 Sarjataulukko
               </button>
               <Link
                 to="/tactics"
-                className="px-6 sm:px-7 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-full text-base font-bold shadow-lg shadow-emerald-600/25 transition-all hover:scale-105 flex items-center gap-2 text-white"
+                className="px-8 py-4 bg-green-500 hover:bg-green-600 rounded-full text-lg font-semibold shadow-lg transition flex items-center gap-2"
               >
-                <Target size={18} />
+                <Target size={20} />
                 Kokoonpanot
               </Link>
             </div>
 
-            <div className="flex flex-col items-center gap-2 text-white/40 animate-bounce mt-6">
+            <div className="flex flex-col items-center gap-2 text-white/40 animate-bounce mt-8">
               <span className="text-xs uppercase tracking-widest font-bold">Selaa alas</span>
               <ChevronDown size={20} />
             </div>

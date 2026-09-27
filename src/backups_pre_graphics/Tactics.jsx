@@ -15,10 +15,8 @@ import {
 import { getComprehensivePlayerAndGoalieLists } from '../utils/csvDataLoader';
 import { getPlayerImage, getPlayerMediaInfo } from '../utils/playerMedia';
 import Reveal from '../components/Reveal';
-import TacticsCourt from '../components/TacticsCourt';
 
 export default function Tactics() {
-  const [courtSurface, setCourtSurface] = useState('court-blue');
   const [allPlayers, setAllPlayers] = useState([]);
   const [availableSeasons, setAvailableSeasons] = useState([]);
   const [selectedSeason, setSelectedSeason] = useState('');
@@ -583,59 +581,10 @@ export default function Tactics() {
                     </div>
                   </div>
 
-                  {/* Surface Selector Toolbar */}
-                  <div className="flex flex-wrap items-center gap-1.5 mb-3 bg-black/40 p-1.5 rounded-xl border border-white/10 w-fit">
-                    <span className="text-xs font-semibold text-white/70 px-2">Pinnoite:</span>
-                    <button
-                      type="button"
-                      onClick={() => setCourtSurface('court-blue')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                        courtSurface === 'court-blue'
-                          ? 'bg-[#1e5ba8] text-white shadow border border-blue-400/50'
-                          : 'text-white/60 hover:text-white'
-                      }`}
-                    >
-                      Matto (Sininen)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCourtSurface('court-wood')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                        courtSurface === 'court-wood'
-                          ? 'bg-[#a86c32] text-white shadow border border-amber-400/50'
-                          : 'text-white/60 hover:text-white'
-                      }`}
-                    >
-                      Puuparketti
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCourtSurface('court-neon')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                        courtSurface === 'court-neon'
-                          ? 'bg-[#6b5bd7] text-white shadow border border-purple-400/50'
-                          : 'text-white/60 hover:text-white'
-                      }`}
-                    >
-                      Neon Arena
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCourtSurface('court-classic')}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
-                        courtSurface === 'court-classic'
-                          ? 'bg-gray-700 text-white shadow border border-gray-500/50'
-                          : 'text-white/60 hover:text-white'
-                      }`}
-                    >
-                      Perinteinen
-                    </button>
-                  </div>
-
                   {/* Field Visualization */}
                   <div
-                    className="relative w-full rounded-2xl overflow-hidden touch-none shadow-2xl p-2 bg-black/60 border-2 border-white/20"
-                    style={{ height: Math.max(260, field.height - 100) }}
+                    className="relative w-full bg-gray-900 rounded-lg border-2 border-dashed border-white/30 overflow-hidden touch-none"
+                    style={{ height: Math.max(200, field.height - 100) }}
                     ref={el => fieldRefs.current[field.id] = el}
                     onDragOver={handleDragOver}
                     onDrop={(e) => handleDrop(e, field.id)}
@@ -645,76 +594,63 @@ export default function Tactics() {
                     onTouchStart={(e) => handleFieldTouch(e, field.id)}
                     onTouchEnd={handleFieldTouchEnd}
                   >
-                    {/* Realistic Floorball Court SVG Graphics */}
-                    <TacticsCourt surface={courtSurface} />
+                    {/* SekTa logo background */}
+                    <div className="absolute inset-0 opacity-5 flex items-center justify-center">
+                      <div className="text-white text-6xl font-bold">SEKTA</div>
+                    </div>
 
                     {/* Player positions */}
-                    {field.players.map((player) => {
-                      const isGoalie = player.player.position === 'Maalivahti' || (player.player.role && player.player.role.toLowerCase().includes('maali'));
-                      const isDefense = player.player.role && player.player.role.toLowerCase().includes('puolust');
-                      const roleBorder = isGoalie
-                        ? 'border-amber-400 bg-amber-500'
-                        : isDefense
-                          ? 'border-blue-400 bg-blue-600'
-                          : 'border-orange-400 bg-orange-500';
-                      const roleCode = isGoalie ? 'MV' : isDefense ? 'P' : 'H';
-
-                      return (
-                        <div
-                          key={player.id}
-                          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move z-10"
-                          style={{
-                            left: `${player.x}%`,
-                            top: `${player.y}%`,
-                            touchAction: 'none'
+                    {field.players.map((player) => (
+                      <div
+                        key={player.id}
+                        className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move"
+                        style={{
+                          left: `${player.x}%`,
+                          top: `${player.y}%`,
+                          touchAction: 'none'
+                        }}
+                        onMouseDown={(e) => handleFieldMouseDown(e, field.id, player.id)}
+                        onTouchStart={(e) => handleFieldTouchStart(e, field.id, player.id)}
+                      >
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{
+                            scale: activeFieldPlayer?.playerId === player.id ? 1.2 : 1,
+                            boxShadow: activeFieldPlayer?.playerId === player.id ? '0 0 20px rgba(249, 115, 22, 0.8)' : 'none'
                           }}
-                          onMouseDown={(e) => handleFieldMouseDown(e, field.id, player.id)}
-                          onTouchStart={(e) => handleFieldTouchStart(e, field.id, player.id)}
-                        >
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{
-                              scale: activeFieldPlayer?.playerId === player.id ? 1.2 : 1,
-                              boxShadow: activeFieldPlayer?.playerId === player.id ? '0 0 25px rgba(249, 115, 22, 0.9)' : '0 4px 14px rgba(0,0,0,0.6)'
-                            }}
-                            className={`relative group rounded-full ${
-                              activeFieldPlayer?.playerId === player.id ? 'ring-4 ring-orange-500 ring-offset-2 ring-offset-gray-900' : ''
+                          className={`relative group rounded-full ${activeFieldPlayer?.playerId === player.id ? 'ring-4 ring-orange-500 ring-offset-2 ring-offset-gray-900' : ''
                             }`}
-                          >
-                            <div className={`w-12 h-12 rounded-full border-2 ${roleBorder} shadow-lg overflow-hidden relative`}>
-                              <img
-                                src={`/${player.player.img}`}
-                                alt={player.player.name}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  e.target.parentElement.innerHTML = `
-                                    <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
-                                      ${player.player.number || roleCode}
-                                    </div>
-                                  `;
-                                }}
-                              />
-                              <div className="absolute top-0 right-0 bg-black/85 text-[8px] font-black text-white px-1 rounded-bl leading-tight">
-                                {roleCode}
-                              </div>
-                            </div>
-                            <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-[11px] font-bold px-1.5 py-0.5 rounded whitespace-nowrap border border-white/20 shadow">
-                              {player.player.name.split(' ')[0]} {player.player.number ? `#${player.player.number}` : ''}
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removePlayerFromField(field.id, player.id);
+                        >
+                          <div className="w-12 h-12 rounded-full border-2 border-white shadow-lg overflow-hidden">
+                            <img
+                              src={`/${player.player.img}`}
+                              alt={player.player.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.parentElement.innerHTML = `
+                                  <div class="w-full h-full bg-gradient-to-br from-orange-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">
+                                    ${player.player.number}
+                                  </div>
+                                `;
                               }}
-                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow"
-                            >
-                              <X size={10} />
-                            </button>
-                          </motion.div>
-                        </div>
-                      );
-                    })}
+                            />
+                          </div>
+                          <div className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs px-1 py-0.5 rounded whitespace-nowrap">
+                            {player.player.name.split(' ')[0]}
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removePlayerFromField(field.id, player.id);
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X size={10} />
+                          </button>
+                        </motion.div>
+                      </div>
+                    ))}
 
                     {/* Resize handle */}
                     <div

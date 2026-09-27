@@ -46,25 +46,13 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
     console.log(`🎯 Available stats in array:`, stats?.filter(s => s.name.toLowerCase().includes('mika')));
   }
 
-  const isGoalie = playerStats?.position === 'Maalivahti' || (p && p.role && p.role.toLowerCase().includes('maali'));
-  const isDefense = p && p.role && p.role.toLowerCase().includes('puolust');
-  const roleCode = isGoalie ? 'MV' : isDefense ? 'P' : 'H';
-  const roleBadgeColor = isGoalie
-    ? 'bg-amber-500/30 text-amber-300 border-amber-400/50'
-    : isDefense
-      ? 'bg-blue-500/30 text-blue-300 border-blue-400/50'
-      : 'bg-orange-500/30 text-orange-300 border-orange-400/50';
-
-  const maxPoints = stats && stats.length > 0 ? Math.max(...stats.map(s => s?.points || 0)) : 0;
-  const isTopScorer = !isGoalie && playerStats && playerStats.points > 0 && playerStats.points === maxPoints;
-
   return (
     <motion.article
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, delay: index * 0.06 }}
       viewport={{ once: true }}
-      className="group relative rounded-2xl p-1 bg-gradient-to-b from-white/20 via-white/10 to-transparent hover:from-orange-500/70 hover:via-purple-600/50 hover:to-orange-500/40 border border-white/10 hover:border-orange-500/50 shadow-xl hover:shadow-2xl hover:shadow-orange-500/20 transition-all duration-300 cursor-pointer overflow-hidden h-full flex flex-col"
+      className="bg-white/10 backdrop-blur-md rounded-xl p-4 pt-4 pb-3 text-center border border-white/10 hover:-translate-y-1 transition cursor-pointer group h-full flex flex-col"
       onMouseEnter={() => { setHovered(true); videoRef.current?.play(); }}
       onMouseLeave={() => {
         setHovered(false);
@@ -72,103 +60,85 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
       }}
       onClick={() => setShowDetails(!showDetails)}
     >
-      {/* Holographic shine sheen on hover */}
-      <div className="card-shine" />
-
-      <div className="relative rounded-xl bg-[#141129]/95 backdrop-blur-md p-3.5 text-center flex flex-col h-full border border-white/5">
-        {/* Player Photo/Video */}
-        <div className="relative mx-auto mb-2 overflow-hidden rounded-xl w-48 h-80 md:w-56 md:h-96 flex-grow flex-shrink-0 bg-black/40 border border-white/10 shadow-inner">
-          {p.video && (
-            <video
-              ref={videoRef}
-              src={p.video}
-              muted
-              preload="auto"
-              playsInline
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-100" : "opacity-0"}`}
-            />
-          )}
-          <img
-            src={p.img}
-            alt={p.name}
-            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-0" : "opacity-100"}`}
-            onError={(e) => { e.currentTarget.src = "/gorilla_puku.jpeg"; }}
+      {/* Player Photo/Video */}
+      <div className="relative mx-auto mb-2 overflow-hidden rounded-lg w-48 h-80 md:w-56 md:h-96 flex-grow flex-shrink-0">
+        {p.video && (
+          <video
+            ref={videoRef}
+            src={p.video}
+            muted
+            preload="auto"
+            playsInline
+            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-100" : "opacity-0"}`}
           />
-
-          {/* Top badges */}
-          <div className="absolute top-2.5 left-2.5 z-10 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-lg shadow-lg">
-            {p && p.number && <span className="text-orange-400 font-mono font-black text-sm">#{p.number}</span>}
-            <span className={`text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${roleBadgeColor}`}>
-              {roleCode}
-            </span>
-          </div>
-
-          {isTopScorer && (
-            <div className="absolute top-2.5 right-2.5 z-10 flex items-center gap-1 bg-amber-500/25 backdrop-blur-md border border-amber-400/50 px-2.5 py-1 rounded-full text-amber-300 text-[10px] font-black tracking-wider uppercase shadow-lg">
-              <span>👑</span> Kultakypärä
-            </div>
-          )}
-
-          {/* Click indicator */}
-          <div className="absolute bottom-2 right-2 bg-orange-500/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-            <BarChart3 size={16} className="text-white" />
-          </div>
-        </div>
-
-        {/* Name and Number */}
-        <div className="flex items-baseline justify-center gap-2 mb-0.5 mt-auto">
-          <strong className="text-white text-lg font-bold tracking-wide uppercase">
-            {p && p.name ? normalizeString(p.name) : 'Player'}
-          </strong>
-        </div>
-        <div className="text-orange-400 text-xs font-semibold uppercase tracking-wider mb-2">
-          {p.role || (isGoalie ? 'Maalivahti' : isDefense ? 'Puolustaja' : 'Hyökkääjä')}
-        </div>
-
-        {/* Season Stats - HUD style */}
-        {playerStats && (
-          <div className="grid grid-cols-4 gap-1.5 mb-1 text-xs">
-            {playerStats.position === 'Maalivahti' ? (
-              <>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-green-400 font-black text-sm">{playerStats.games || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">O</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-amber-400 font-black text-sm">{playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}</div>
-                  <div className="text-white/50 text-[10px] font-bold">T%</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-blue-400 font-black text-sm">{playerStats.wins || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">V</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-purple-400 font-black text-sm">{playerStats.shutouts || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">NP</div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-green-400 font-black text-sm">{playerStats.games || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">O</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-orange-400 font-black text-sm">{playerStats.goals || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">M</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-lg p-1">
-                  <div className="text-cyan-400 font-black text-sm">{playerStats.assists || 0}</div>
-                  <div className="text-white/50 text-[10px] font-bold">S</div>
-                </div>
-                <div className="bg-gradient-to-br from-orange-500/25 to-purple-600/25 border border-orange-500/40 rounded-lg p-1">
-                  <div className="text-white font-black text-sm">{playerStats.points || 0}</div>
-                  <div className="text-orange-300 text-[10px] font-bold">P</div>
-                </div>
-              </>
-            )}
-          </div>
         )}
+        <img
+          src={p.img}
+          alt={p.name}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${hovered ? "opacity-0" : "opacity-100"}`}
+          onError={(e) => { e.currentTarget.src = "/gorilla_puku.jpeg"; }}
+        />
+        
+        {/* Click indicator */}
+        <div className="absolute bottom-2 right-2 bg-orange-500/80 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <BarChart3 size={16} className="text-white" />
+        </div>
+      </div>
+
+      {/* Name and Number */}
+      <div className="flex items-baseline justify-center gap-2 mb-1 mt-auto">
+        <strong className="text-white text-lg">
+          {p && p.name ? normalizeString(p.name) : 'Player'}
+        </strong>
+        {p && p.number ? <span className="text-white/60 font-mono">#{p.number}</span> : null}
+      </div>
+      
+      {/* Season Stats - Inline compact format without icons */}
+      {playerStats && (
+        <div className="grid grid-cols-4 gap-1 mb-1 text-xs">
+          {playerStats.position === 'Maalivahti' ? (
+            // Goalie stats in compact format
+            <>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-green-400 font-bold">{playerStats.games || 0}</div>
+                <div className="text-white/60">O</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-yellow-400 font-bold">{playerStats.savePercentage ? `${playerStats.savePercentage.toFixed(1)}%` : '0%'}</div>
+                <div className="text-white/60">T%</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-blue-400 font-bold">{playerStats.wins || 0}</div>
+                <div className="text-white/60">V</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-purple-400 font-bold">{playerStats.shutouts || 0}</div>
+                <div className="text-white/60">NP</div>
+              </div>
+            </>
+          ) : (
+            // Regular player stats in compact format
+            <>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-green-400 font-bold">{playerStats.games || 0}</div>
+                <div className="text-white/60">O</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-orange-400 font-bold">{playerStats.goals || 0}</div>
+                <div className="text-white/60">M</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-cyan-400 font-bold">{playerStats.assists || 0}</div>
+                <div className="text-white/60">S</div>
+              </div>
+              <div className="bg-white/10 rounded p-1">
+                <div className="text-purple-400 font-bold">{playerStats.points || 0}</div>
+                <div className="text-white/60">P</div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Expanded details */}
       <AnimatePresence>
@@ -249,7 +219,6 @@ function PlayerCard({ p, index, stats, onStatsClick }) {
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
     </motion.article>
   );
 }

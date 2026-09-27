@@ -39,7 +39,6 @@ import {
   getPlayerStatsForSeason
 } from '../utils/excelAnalyzer';
 import Reveal from '../components/Reveal';
-import StatsPodium from '../components/StatsPodium';
 
 export default function Statistics() {
   const [stats, setStats] = useState(null);
@@ -596,9 +595,6 @@ export default function Statistics() {
             transition={{ duration: 0.5 }}
             className="space-y-8"
           >
-            {/* Top 3 Podium & Form Guide */}
-            <StatsPodium playerStats={playerStats} season={selectedSeason} />
-
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatsCard
                 title="Yhteensa Maaleja"
